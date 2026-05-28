@@ -29,6 +29,8 @@ format:
     fontsize: 11pt
     toc: false
 
+cluster: security-and-sync
+cluster-order: 2
 ---
 
 <!-- ============================================================================
@@ -552,3 +554,15 @@ top of this file. If anything below is unchecked, the post is not ready.
     [ ] Hero image displays in /blog/ listing card
     [ ] Internal links resolve
 ============================================================================ -->
+
+## Related posts in this cluster
+
+This post is part of the *Security, Backup, and Sync* series.
+Recommended reading order:
+
+1. Post 31: [Research Backup Architecture](../31-githubarchive/)
+2. **Post 32: Migrating Off Dropbox: Beyond Dotfiles** (this post)
+3. Post 33: [Setting Up pass: a Unix Password Manager](../33-unix-pass-setup/)
+4. Post 34: [Secrets Management for the Workflow Construct](../34-secrets-management/)
+5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../35-multi-laptop-security/)
+
