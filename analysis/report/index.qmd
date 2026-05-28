@@ -560,9 +560,9 @@ top of this file. If anything below is unchecked, the post is not ready.
 This post is part of the *Security, Backup, and Sync* series.
 Recommended reading order:
 
-1. Post 31: [Research Backup Architecture](../31-githubarchive/)
+1. Post 31: [Research Backup Architecture](../31-sec-three-tier-backup-architecture/)
 2. **Post 32: Migrating Off Dropbox: Beyond Dotfiles** (this post)
-3. Post 33: [Setting Up pass: a Unix Password Manager](../33-unix-pass-setup/)
-4. Post 34: [Secrets Management for the Workflow Construct](../34-secrets-management/)
-5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../35-multi-laptop-security/)
+3. Post 33: [Setting Up pass: a Unix Password Manager](../33-sec-pass-password-manager/)
+4. Post 34: [Secrets Management for the Workflow Construct](../34-sec-aws-and-pass-secrets/)
+5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../35-sec-multi-laptop-threat-model/)
 
