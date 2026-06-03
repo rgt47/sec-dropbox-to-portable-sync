@@ -1,0 +1,1267 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  11pt,
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+    \setmonofont[]{DejaVu Sans Mono}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{5}
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.40,0.45,0.13}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.07,0.07,0.07}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[L]{Thomas Lab}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{}
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
+\@ifpackageloaded{fontawesome5}{}{\usepackage{fontawesome5}}
+\definecolor{quarto-callout-color}{HTML}{909090}
+\definecolor{quarto-callout-note-color}{HTML}{0758E5}
+\definecolor{quarto-callout-important-color}{HTML}{CC1914}
+\definecolor{quarto-callout-warning-color}{HTML}{EB9113}
+\definecolor{quarto-callout-tip-color}{HTML}{00A047}
+\definecolor{quarto-callout-caution-color}{HTML}{FC5300}
+\definecolor{quarto-callout-color-frame}{HTML}{acacac}
+\definecolor{quarto-callout-note-color-frame}{HTML}{4582ec}
+\definecolor{quarto-callout-important-color-frame}{HTML}{d9534f}
+\definecolor{quarto-callout-warning-color-frame}{HTML}{f0ad4e}
+\definecolor{quarto-callout-tip-color-frame}{HTML}{02b875}
+\definecolor{quarto-callout-caution-color-frame}{HTML}{fd7e14}
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+\makeatletter
+\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
+\makeatother
+\makeatletter
+\@ifundefined{shadecolor}{\definecolor{shadecolor}{rgb}{.97, .97, .97}}{}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, sharp corners, frame hidden, interior hidden, enhanced, breakable]}{\end{tcolorbox}}\fi
+\makeatother
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Migrating Off Dropbox: Beyond Dotfiles},
+  pdfauthor={Ronald `Ryy' G. Thomas},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Migrating Off Dropbox: Beyond Dotfiles}
+\author{Ronald `Ryy' G. Thomas}
+\date{2026-05-07}
+
+\begin{document}
+\maketitle
+
+\begin{figure}[H]
+
+{\centering \includegraphics[width=0.8\textwidth,height=\textheight]{media/images/hero.jpg}
+
+}
+
+\caption{A wooden tray on a plain workbench, with one large compartment
+on the left holding a single round glass weight and three narrower
+compartments on the right holding three different small objects,
+suggesting a single category being separated into three purpose-fit
+ones.}
+
+\end{figure}%
+
+\emph{A portable dotfiles repository is only the first half of leaving
+Dropbox. The other half is the rest of the workflow.}
+
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, left=2mm, rightrule=.15mm, opacityback=0, coltitle=black, colframe=quarto-callout-note-color-frame, bottomtitle=1mm, opacitybacktitle=0.6, breakable, bottomrule=.15mm, titlerule=0mm, leftrule=.75mm, toprule=.15mm, toptitle=1mm, arc=.35mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}]
+
+\textbf{Multi-Machine Setup Series} (recommended reading order):
+\href{../../../posts/64-migrating-off-dropbox/}{Part 1: Migrating off
+Dropbox} \textbar{}
+\href{../../../posts/65-multi-laptop-bootstrap/}{Part 2: Multi-Laptop
+Bootstrap} \textbar{}
+\href{../../../posts/67-multi-laptop-security/}{Part 3: Security Audit}
+
+\end{tcolorbox}
+
+\section{Introduction}\label{introduction}
+
+I did not really appreciate how much of my daily workflow depended on
+Dropbox until I tried to leave it. The dotfiles migration described in
+\href{https://focusonr.org/posts/24-setupdotfilesongithub/}{post 24} is
+the obvious half: pull the configuration files out of a cloud-mounted
+directory, put them under git, write an installer that creates symlinks.
+Once that work is committed, every dotfile in \texttt{\$HOME} becomes
+version-controlled and reproducible on a new laptop with two commands.
+
+The non-obvious half is everything else. The dotfiles deploy cleanly on
+a fresh machine, then the new shell tries to
+\texttt{cd\ \textasciitilde{}/prj/some-project} and fails because the
+project tree still lives at
+\texttt{\textasciitilde{}/Library/CloudStorage/Dropbox/prj/}. Backup
+scripts hardcode the same Dropbox path. AI-tool history files live under
+a Dropbox-synced symlink and accumulate conflict copies on every
+overlapping write between machines. The configuration is portable; the
+workflow is not.
+
+This post is the second half of post 24. It frames the problem as three
+independent layers (dotfiles, project content, append-only history),
+surveys the sync mechanisms each layer can use, and walks through a
+migration sequence that does not break a running pipeline mid-move. The
+companion deliverable is a decision worksheet that takes a reader from
+current state to a concrete migration plan. The choice of whether to
+leave Dropbox at all is left to the reader; this post is about doing it
+deliberately rather than partially.
+
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, left=2mm, rightrule=.15mm, opacityback=0, coltitle=black, colframe=quarto-callout-note-color-frame, bottomtitle=1mm, opacitybacktitle=0.6, breakable, bottomrule=.15mm, titlerule=0mm, leftrule=.75mm, toprule=.15mm, toptitle=1mm, arc=.35mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Status of this migration}]
+
+This post documents an ongoing migration on the author's own setup. At
+time of writing, Layer 1 (dotfiles) is complete: the repository exists
+at \texttt{\textasciitilde{}/dotfiles/}, the installer is written and
+dry-run-tested, and the architecture below has been exercised end-to-end
+on this laptop. Layer 2 (project content) and Layer 3 (append-only
+history) are in progress. The framework is presented as it stands today;
+the `After completing this migration' results section near the end is
+labelled as expected outcomes rather than claimed ones, and will be
+updated with measured numbers once the migration reaches a fresh laptop.
+The companion plan tracking this work is available in the dotfiles
+repository as \texttt{MULTI\_LAPTOP\_PLAN.md}.
+
+\end{tcolorbox}
+
+\subsection{Motivations}\label{motivations}
+
+\begin{itemize}
+\tightlist
+\item
+  A new laptop bootstrap should be a one-command operation. Today, after
+  running the dotfiles installer, half the workflow still requires
+  installing Dropbox, signing in, and waiting for several gigabytes to
+  materialise before anything functional happens.
+\item
+  Dropbox sync of append-only files (shell history, AI-tool history,
+  editor undo files) routinely produces conflict copies on multi-machine
+  setups. The 12 conflict copies of \texttt{history.jsonl} discovered in
+  this account on 2026-05-02 are one symptom of an architectural
+  mismatch.
+\item
+  Project content directories under Dropbox commingle with cloud-only
+  artefacts that should not be synced (model output, large derived data,
+  machine-specific caches). Excluding them via \texttt{.dropboxignore}
+  is fragile and error-prone.
+\item
+  The set of services that compete for \texttt{\$HOME} (Dropbox, iCloud
+  Drive, Google Drive, OneDrive) keeps growing, and choosing one default
+  for everything is increasingly suboptimal as each service specialises.
+\item
+  The work to reach `workflow independence' is largely the same work as
+  `workflow modernisation': separating concerns by layer, choosing sync
+  mechanisms that match each layer's semantics, and documenting each
+  move so it can be audited later.
+\end{itemize}
+
+\subsection{Objectives}\label{objectives}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Inventory the workflow against three layers (dotfiles, project
+  content, append-only history) and classify every sync-relevant
+  artefact into exactly one layer.
+\item
+  Produce a decision worksheet that, for each layer, names the candidate
+  sync mechanisms and the trade-offs that distinguish them.
+\item
+  Sequence the migration so that the backup pipeline never points at a
+  stale source path and the launchd jobs stay valid throughout the move.
+\item
+  Establish a fresh-machine bootstrap that does not require Dropbox and
+  verifies the entire workflow end to end.
+\end{enumerate}
+
+This post documents the author's own migration. If errors are spotted or
+better approaches are known, the comment thread below is the right place
+to note them.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{media/images/ambiance1.jpg}
+
+}
+
+\caption{A wooden desk seen from above with three small index cards
+arranged in a horizontal row, each card showing a hand-drawn symbol,
+suggesting classification before action.}
+
+\end{figure}%
+
+\section{What is the Problem?}\label{what-is-the-problem}
+
+The problem is that `sync everything via one cloud provider' was a
+reasonable default in 2014, when Dropbox was the only practical option
+for arbitrary file sync, but it now bundles three semantically distinct
+concerns into a single mechanism. The three concerns:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Configuration distribution} wants version history, atomic
+  deploys, and the ability to roll back. Git solves this; cloud sync
+  only approximates it.
+\item
+  \textbf{Project content sync} wants block-level diffs for large files,
+  conflict semantics that match the file format, and the option to
+  exclude derived artefacts. Different sync mechanisms handle these very
+  differently.
+\item
+  \textbf{Append-only history} wants either single-machine writes or a
+  sync mechanism that understands append semantics. Cloud sync writes
+  the whole file on every change and produces a conflict copy on every
+  overlap.
+\end{itemize}
+
+A useful analogy: it is the same reason a research compendium separates
+\texttt{data/}, \texttt{R/}, and \texttt{analysis/}. Each directory has
+different rules about what changes, how it changes, and who is allowed
+to change it. Lumping them all into one sync mechanism enforces no
+useful constraint and produces friction at the boundary.
+
+A concrete example from this migration: the file
+\texttt{\textasciitilde{}/.claude/history.jsonl} is an append-only log
+of prompts entered into the Claude Code CLI. Five machines (athena, Joe,
+julia.local, MacBook-Air.local, and the author's primary laptop) write
+to it through a Dropbox-synced symlink. Most days, only one machine is
+active and the file syncs cleanly. The day two machines write within the
+same minute, Dropbox cannot merge the two append streams and creates a
+conflict copy. Across April 2026 alone, this produced four new conflict
+copies on this account, each holding several hundred KB of unique
+prompts; the running total since January is eleven. The file format is
+not the problem; the choice to sync an append log via a whole-file cloud
+provider is.
+
+\section{Prerequisites}\label{prerequisites}
+
+This post assumes:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Operating system:} macOS 13+ or a recent Linux distribution.
+  The sync-mechanism table is applicable to both, but specific path
+  conventions reference macOS.
+\item
+  \textbf{Already in place:} a working dotfiles repository per
+  \href{https://focusonr.org/posts/24-setupdotfilesongithub/}{post 24}.
+  The architecture below builds on that foundation; without it, half the
+  moves cannot be made cleanly.
+\item
+  \textbf{Background knowledge:} comfort with git remotes, basic launchd
+  plist structure, rclone or rsync at the level of a single sync
+  command. The post does not require expertise in any of these.
+\item
+  \textbf{Hardware:} a single primary laptop is sufficient. A second
+  machine (or VM) is useful for the migration's verification step but is
+  not required.
+\item
+  \textbf{Time required:} about a day's careful work to inventory and
+  decide; about a half-day to execute the moves once the decisions are
+  made.
+\end{itemize}
+
+On a single-machine setup where conflict copies have never appeared, the
+migration's payoff is smaller and may not warrant the undertaking. The
+framework still applies, but Dropbox is unlikely to be causing friction
+in that scenario.
+
+\section{The Three Layers}\label{the-three-layers}
+
+Treat the workflow as three layers. Each layer has its own sync
+semantics, its own candidate mechanisms, and its own failure modes.
+
+\subsection{Layer 1: Dotfiles
+distribution}\label{layer-1-dotfiles-distribution}
+
+Solved by post 24. The summary, for reference: configuration files live
+in a git repository at \texttt{\textasciitilde{}/dotfiles/} (outside any
+cloud-mounted path), an \texttt{install.sh} creates symlinks into
+\texttt{\$HOME} per machine, secrets stay out of the repository
+entirely. New-machine bootstrap is
+\texttt{git\ clone\ …\ \textasciitilde{}/dotfiles\ \&\&\ cd\ \textasciitilde{}/dotfiles\ \&\&\ ./install.sh}.
+
+This layer is the easiest to migrate because the files are small, change
+infrequently, and are nearly always edited from a single machine. Git
+handles the multi-machine merge cleanly when overlap does occur.
+
+What post 24 explicitly does not address: project content (the next
+layer), backup-pipeline source paths (also next layer), and append-only
+history (the third layer). Those failures show up only after the
+dotfiles layer is migrated, which is why this post exists.
+
+\subsection{Layer 2: Project content
+sync}\label{layer-2-project-content-sync}
+
+Project content is the directory tree that holds research repositories,
+data, drafts, and archives. On a Dropbox-bound workflow this is
+\texttt{\textasciitilde{}/Dropbox/prj/} and similar siblings
+(\texttt{docs/}, \texttt{sbx/}, \texttt{work/}, \texttt{shr/}).
+
+Project content has different sync characteristics from dotfiles:
+
+\begin{itemize}
+\tightlist
+\item
+  It is much larger (tens of GB is typical).
+\item
+  It contains both small text (R, Quarto) and large binary (data,
+  figures, PDFs).
+\item
+  It changes frequently, often on a single machine within a session.
+\item
+  It includes derived artefacts that should not be synced at all (renv
+  libraries, model output, caches).
+\end{itemize}
+
+The candidate sync mechanisms, with the dimensions that matter:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Mechanism
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Strength
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Weakness
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Per-project git remotes (GitHub, GitLab, Codeberg)} & Diff-aware
+history, atomic deploys, free for small repos & Bad with large binary
+files (Git LFS quotas), each project must be a repo \\
+\textbf{Syncthing (peer-to-peer, no cloud)} & No middleman, no quotas,
+sync-to-LAN is fast, files are local-first & Two machines must be online
+together to sync; conflict semantics are simpler than Dropbox's but
+still file-level \\
+\textbf{rsync over SSH to a NAS or VPS} & Bandwidth-efficient,
+deterministic, scriptable & One-way push (or hand-coded bidirectional);
+requires the destination to exist; no version history without extra
+work \\
+\textbf{iCloud Drive (native macOS)} & Tight macOS integration, included
+with Apple ID & macOS-only; opaque sync timing; cannot exclude
+subdirectories cleanly \\
+\textbf{Google Drive (rclone or native)} & Effectively unlimited storage
+on enterprise plans & Same whole-file model as Dropbox; conflicts behave
+the same way \\
+\end{longtable}
+
+Most readers benefit from a hybrid: per-project git remotes for code
+(the bulk of the value) and Syncthing or rsync for the data that does
+not belong in a public or even private repo. The hybrid wins because it
+lets each artefact go to the mechanism that matches its semantics.
+
+The single most consequential observation in this migration: `project
+content' is not a homogeneous category. Splitting it into `code' and
+`data' before choosing a mechanism makes every subsequent decision
+easier.
+
+\subsubsection{Reconstructable local caches: the Maildir
+case}\label{reconstructable-local-caches-the-maildir-case}
+
+A subset of what looks like Layer 2 data is in fact a local cache of a
+canonical source that already lives elsewhere. For these, the right move
+is not to choose a sync mechanism at all; it is to let each machine
+rebuild its copy from the authoritative source on demand.
+
+The worked example: a Maildir-based mail setup with mutt, mbsync, and
+notmuch. The IMAP server holds the canonical mailbox. \texttt{mbsync}
+mirrors a subset of folders into a local Maildir at
+\texttt{\textasciitilde{}/.local/share/mail/} (or any other non-synced
+path; the XDG
+\texttt{\textasciitilde{}/.local/share/\textless{}app\textgreater{}/}
+location is a sensible default). \texttt{notmuch\ new} indexes the
+Maildir into a local Xapian database. \texttt{mutt} reads the Maildir
+directly. On a second laptop, the same configs deploy via Layer 1, the
+same \texttt{mbsync} runs from a launchd job, the local Maildir gets
+repopulated from IMAP, and \texttt{notmuch\ new} rebuilds the index.
+There is nothing to sync between the two laptops; the IMAP server is
+doing the synchronisation by being the canonical source.
+
+Putting the Maildir in Dropbox is wrong on four counts. It duplicates
+the work IMAP already does. It triples the disk footprint (IMAP +
+Dropbox + local). Maildir's one-message-per-file format produces
+hundreds of thousands of small files that strain cloud-sync engines. And
+the notmuch Xapian database is a B-tree-on-disk format that is not safe
+to share between processes on different machines via file sync.
+
+The same pattern applies to a broader class of local artefacts:
+Homebrew's package cache
+(\texttt{\textasciitilde{}/Library/Caches/Homebrew/}), language-server
+indexes, browser caches, ccache, AI-model caches that hash to the same
+content given the same prompts. None of these need to be synced between
+machines; each is a derivative of an authoritative source and is rebuilt
+cheaply on demand. Treat them as per-machine state, exclude them from
+any sync mechanism, and add the rebuild step to the new-machine
+bootstrap if it does not happen automatically.
+
+The new-laptop bootstrap for the Maildir case, after \texttt{install.sh}
+has deployed the configs:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Restore IMAP/SMTP credentials (manual; from pass / keychain / 1Password).}
+\CommentTok{\# Then:}
+\ExtensionTok{mbsync} \AttributeTok{{-}a}                        \CommentTok{\# populate \textasciitilde{}/.local/share/mail/}
+\ExtensionTok{notmuch}\NormalTok{ new                      }\CommentTok{\# build the Xapian index}
+\ExtensionTok{launchctl}\NormalTok{ bootstrap }\StringTok{"gui/}\VariableTok{$UID}\StringTok{"} \DataTypeTok{\textbackslash{}}
+\NormalTok{  \textasciitilde{}/Library/LaunchAgents/local.mbsync.plist}
+\ExtensionTok{launchctl}\NormalTok{ bootstrap }\StringTok{"gui/}\VariableTok{$UID}\StringTok{"} \DataTypeTok{\textbackslash{}}
+\NormalTok{  \textasciitilde{}/Library/LaunchAgents/local.notmuch.new.plist}
+\end{Highlighting}
+\end{Shaded}
+
+Time depends on mailbox size; a 3 GB mailbox over residential broadband
+is roughly 30-60 minutes. The two scheduled jobs keep the Maildir
+current thereafter.
+
+The one cost of this pattern is that mail is not available offline until
+the first \texttt{mbsync\ -a} completes. For mutt users this is rarely a
+meaningful constraint; for users who need immediate offline access on a
+fresh laptop, an \texttt{rsync} of a recent Maildir snapshot from the
+previous laptop into \texttt{\textasciitilde{}/.local/share/mail/} skips
+the IMAP fetch step.
+
+\subsubsection{Worked example: relocating an existing Maildir to
+\textasciitilde/.local/share/mail/}\label{worked-example-relocating-an-existing-maildir-to-.localsharemail}
+
+A common starting point for long-time mutt users is a Maildir at
+\texttt{\textasciitilde{}/Mail/} (the convention from before the XDG
+Base Directory specification existed). The relocation to
+\texttt{\textasciitilde{}/.local/share/mail/} is mechanical, and the
+cache-and-index can be moved in place rather than re-downloaded. The
+steps below assume mutt + mbsync + notmuch and a single Gmail account at
+\texttt{\textasciitilde{}/Mail/gmail/}; generalisation to other layouts
+is direct.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1. Stop any running mbsync. If a launchd job runs mbsync on a}
+\CommentTok{\#    schedule, bootout it temporarily.}
+\ExtensionTok{pkill} \AttributeTok{{-}f}\NormalTok{ mbsync }\KeywordTok{||} \FunctionTok{true}
+\ExtensionTok{launchctl}\NormalTok{ bootout }\StringTok{"gui/}\VariableTok{$UID}\StringTok{/local.mbsync"} \DecValTok{2}\OperatorTok{\textgreater{}}\NormalTok{/dev/null }\KeywordTok{||} \FunctionTok{true}
+
+\CommentTok{\# 2. Cheap insurance: dump the notmuch tag database. Tags are user}
+\CommentTok{\#    state; the message index can be rebuilt, the tags cannot.}
+\ExtensionTok{notmuch}\NormalTok{ dump }\AttributeTok{{-}{-}output}\OperatorTok{=}\StringTok{"}\VariableTok{$HOME}\StringTok{/notmuch{-}dump{-}}\VariableTok{$(}\FunctionTok{date}\NormalTok{ +\%Y\%m\%d}\VariableTok{)}\StringTok{.txt"}
+
+\CommentTok{\# 3. Move the Maildir AND .notmuch together. They must move}
+\CommentTok{\#    atomically to keep the Xapian database\textquotesingle{}s relative paths valid.}
+\FunctionTok{mkdir} \AttributeTok{{-}p}\NormalTok{ \textasciitilde{}/.local/share/mail}
+\FunctionTok{mv}\NormalTok{ \textasciitilde{}/Mail/gmail   \textasciitilde{}/.local/share/mail/gmail}
+\FunctionTok{mv}\NormalTok{ \textasciitilde{}/Mail/.notmuch \textasciitilde{}/.local/share/mail/.notmuch}
+
+\CommentTok{\# 4. Update the dotfiles repo (Layer 1, single source of truth)}
+\CommentTok{\#    BEFORE editing any live config under $HOME. Edit:}
+\CommentTok{\#       \textasciitilde{}/dotfiles/editors/notmuch{-}config         (path = $HOME/.local/share/mail)}
+\CommentTok{\#       \textasciitilde{}/dotfiles/config/mutt/muttrc             (folder, spoolfile, postponed, record)}
+\CommentTok{\#       \textasciitilde{}/dotfiles/mbsyncrc                        (Path, Inbox under each MaildirStore)}
+\CommentTok{\#    Commit and push. (The dotfiles repo is OUTSIDE cloud{-}mounted}
+\CommentTok{\#    paths per Layer 1, so in{-}place editors are safe to use here.)}
+
+\CommentTok{\# 5. Reflect the dotfiles changes into $HOME (idempotent).}
+\BuiltInTok{cd}\NormalTok{ \textasciitilde{}/dotfiles }\KeywordTok{\&\&} \ExtensionTok{./install.sh}
+
+\CommentTok{\# 6. Verify.}
+\ExtensionTok{mbsync} \AttributeTok{{-}a}                  \CommentTok{\# Resumes incrementally; should NOT re{-}download.}
+\ExtensionTok{notmuch}\NormalTok{ search }\StringTok{\textquotesingle{}*\textquotesingle{}} \KeywordTok{|} \FunctionTok{head}  \CommentTok{\# Confirms the index resolves message paths.}
+\ExtensionTok{mutt} \AttributeTok{{-}e} \StringTok{\textquotesingle{}exit\textquotesingle{}}             \CommentTok{\# Opens and exits cleanly with the new paths.}
+
+\CommentTok{\# 7. Re{-}enable the scheduled mbsync once verification passes.}
+\ExtensionTok{launchctl}\NormalTok{ bootstrap }\StringTok{"gui/}\VariableTok{$UID}\StringTok{"} \DataTypeTok{\textbackslash{}}
+\NormalTok{    \textasciitilde{}/Library/LaunchAgents/local.mbsync.plist}
+\end{Highlighting}
+\end{Shaded}
+
+Two points worth flagging:
+
+\begin{itemize}
+\tightlist
+\item
+  The notmuch Xapian database stores message paths relative to
+  \texttt{database.path}. Moving the Maildir and \texttt{.notmuch}
+  together preserves those relative paths, so \texttt{notmuch\ new} is
+  not required. If the two directories are moved separately for any
+  reason, the index becomes invalid and \texttt{notmuch\ new} is needed
+  to rebuild it.
+\item
+  Step 4 (update the dotfiles repo first) is the step the obvious
+  version of this recipe omits. Editing the live
+  \texttt{\textasciitilde{}/.config/mutt/muttrc} directly before
+  updating the repo copy makes the two diverge. A second laptop
+  bootstrapped from the repo today would deploy a muttrc that points at
+  a Maildir that does not exist. Always edit the repo file, then
+  \texttt{install.sh}.
+\end{itemize}
+
+The pre-XDG location (\texttt{\textasciitilde{}/Mail/}) can be deleted
+after a few days of confirmed working state; keep it around briefly as a
+rollback target.
+
+\subsection{Layer 3: Append-only history
+files}\label{layer-3-append-only-history-files}
+
+This layer is small in bytes but disproportionate in friction. The
+relevant files:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{\textasciitilde{}/.zsh\_history} (shell command history)
+\item
+  \texttt{\textasciitilde{}/.viminfo} (vim's last-used files, registers,
+  marks)
+\item
+  \texttt{\textasciitilde{}/.claude/history.jsonl} (Claude Code prompt
+  history)
+\item
+  Editor undo files (\texttt{\textasciitilde{}/.local/state/vim/undo/})
+\item
+  AI-tool histories from any other tools
+  (\texttt{\textasciitilde{}/.gemini/}, etc.)
+\end{itemize}
+
+Each is append-only at the application level and whole-file at the sync
+layer. That mismatch is what produces conflict copies. There are three
+architecturally honest choices:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Per-machine state.} Do not sync these files at all. Accept
+  that arrow-key history on one laptop does not include commands typed
+  on another. Simplest; works for most users; what most non-Dropbox
+  dotfile setups assume.
+\item
+  \textbf{Single-machine writes.} Designate one machine as the canonical
+  owner; the others write to local files that are never synced.
+  Practical only if the user genuinely uses one machine 95\% of the
+  time.
+\item
+  \textbf{Append-aware sync.} A few sync mechanisms (atuin for shell
+  history, custom JSONL mergers for AI logs) understand append semantics
+  and can merge two divergent streams. More moving parts, but eliminates
+  the conflict-copy class entirely.
+\end{enumerate}
+
+The right choice depends on the user. Most readers will be happiest with
+option 1 plus, optionally, atuin for shell history because it is
+genuinely useful across machines and well-engineered for the
+multi-machine case.
+
+\section{The Decision Worksheet}\label{the-decision-worksheet}
+
+The companion deliverable for this post is a Quarto document at
+\texttt{docs/migration-decision-worksheet.qmd}. It walks the reader
+through:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Inventory.} List every sync-relevant artefact in
+  \texttt{\$HOME} and \texttt{\textasciitilde{}/Dropbox/}. Classify each
+  into one of the three layers.
+\item
+  \textbf{Mechanism selection.} For each layer, pick a sync mechanism
+  (or `no sync, per-machine') from the table above.
+\item
+  \textbf{Migration order.} Sequence the moves so the backup pipeline
+  never points at a stale path. The general rule is: dotfiles first
+  (already done if post 24 was followed), then a single project as a
+  pilot, then the rest of project content, then history files.
+\item
+  \textbf{Verification.} Bootstrap a clean user account or VM and
+  confirm the full workflow comes up without Dropbox.
+\end{enumerate}
+
+The worksheet is generic; it does not assume any particular project
+structure or sync mechanism. Completing it for a given setup converts
+the migration into a series of small, audited moves rather than a single
+large rewrite.
+
+\section{Migration Sequence}\label{migration-sequence}
+
+The order of operations matters because the backup pipeline must remain
+valid at every intermediate step. The sequence below comes from running
+this migration on a real workflow.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Confirm dotfiles foundation.} Verify post 24's repository
+  works. Run \texttt{install.sh\ -\/-dry-run} on a clean account or VM.
+  Resolve any failures before proceeding.
+\item
+  \textbf{Introduce a path-abstraction env var.} Add \texttt{PRJ\_ROOT}
+  to \texttt{\textasciitilde{}/.zshenv} with a fallback that resolves to
+  \texttt{\textasciitilde{}/Dropbox/prj} for now. Replace literal
+  \texttt{\textasciitilde{}/Dropbox/prj} references in scripts and
+  configs with \texttt{\$PRJ\_ROOT}. Nothing visible changes, but the
+  next move is now a single-line edit.
+\item
+  \textbf{Pilot one project.} Pick a single small repo. Move it from
+  \texttt{\textasciitilde{}/Dropbox/prj/\textless{}project\textgreater{}/}
+  to \texttt{\textasciitilde{}/prj/\textless{}project\textgreater{}/}
+  (real path, outside cloud). Push to a private git remote if it is not
+  already. Confirm the workflow on it.
+\item
+  \textbf{Migrate the rest of project content in batches.} A batch a day
+  prevents the backup pipeline from going stale. For each batch: move,
+  repoint any in-script paths, push to remotes, verify.
+\item
+  \textbf{Repoint backup sources.} Once \texttt{\$PRJ\_ROOT} resolves to
+  the new path, edit \texttt{backup-gdrive} and \texttt{backup-icloud}
+  (or their equivalents) to source from \texttt{\$PRJ\_ROOT} instead of
+  the literal Dropbox path. The launchd plists themselves do not change;
+  only the scripts they call.
+\item
+  \textbf{Resolve append-only history.} Pick option 1, 2, or 3 from the
+  previous section. Apply per-file. Document the choice in the dotfiles
+  repo's README for future reference.
+\item
+  \textbf{Verify on a clean account.} Boot a fresh user, clone dotfiles,
+  run installer, set up project remotes, confirm the workflow. The first
+  surprise reveals the assumption that was hiding.
+\item
+  \textbf{Optional: uninstall Dropbox.} Most users do not need to
+  actually remove Dropbox. Once the workflow is independent, Dropbox can
+  stay installed as a backup or for sharing files with colleagues,
+  without being load-bearing for the workflow itself.
+\end{enumerate}
+
+The sequence is robust to interruption. Stopping after step 3 leaves a
+working pilot with the backup pipeline intact. Stopping after step 5
+leaves the workflow independent; the history-file decision can be
+deferred.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{media/images/ambiance2.jpg}
+
+}
+
+\caption{Two open-top boxes side by side on a workbench, the left box
+full of mixed objects and the right box divided into three sorted
+compartments, with a single object mid-transfer between them.}
+
+\end{figure}%
+
+\section{Things to Watch Out For}\label{things-to-watch-out-for}
+
+Seven gotchas to anticipate during the migration. Each lists the symptom
+and the fix.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{The backup pipeline goes stale silently.} Symptom:
+  \texttt{backup-gdrive} runs every night, exits 0, but the syncthing
+  folder it backs up has not changed in a week because the source path
+  no longer exists. Fix: \texttt{rclone\ sync} exits 0 even when the
+  source is empty, so add an explicit
+  \texttt{{[}{[}\ -d\ \$PRJ\_ROOT\ {]}{]}} guard at the top of every
+  backup script and fail loud on missing source.
+\item
+  \textbf{Cloud-mounted git working trees corrupt their indexes.}
+  Symptom: \texttt{git\ status} reports phantom changes;
+  \texttt{git\ fsck} finds dangling refs; the working tree is
+  inconsistent. Fix: never put \texttt{\textasciitilde{}/dotfiles/}
+  inside \texttt{\textasciitilde{}/Dropbox/},
+  \texttt{\textasciitilde{}/Library/CloudStorage/...}, or
+  \texttt{\textasciitilde{}/Library/Mobile\ Documents/}. Git's frequent
+  writes to \texttt{.git/index} race with the cloud provider's sync
+  engine. The repo MUST be on a non-synced filesystem path.
+\item
+  \textbf{Symlinks to Dropbox break asymmetrically across machines.}
+  Symptom:
+  \texttt{\textasciitilde{}/.config/git\ -\textgreater{}\ \textasciitilde{}/Library/CloudStorage/Dropbox/dotfiles/config/git}
+  on machine A, but on machine B the same symlink is dangling because
+  Dropbox is at a different path or not installed. Fix: symlinks created
+  by \texttt{install.sh} should target \texttt{\$DOTFILES} (an env var
+  resolved at install time), not literal Dropbox paths.
+\item
+  \textbf{Append-only history conflict copies do not announce
+  themselves.} Symptom: a file named
+  \texttt{history\ (machine\textquotesingle{}s\ conflicted\ copy\ YYYY-MM-DD).jsonl}
+  appears next to the canonical file, with no notification, no error, no
+  merge prompt. Fix: a weekly grep for `conflicted copy' across the
+  Dropbox tree, or an explicit migration of the affected files out of
+  cloud sync.
+\item
+  \textbf{launchd plist substitutions overwrite themselves.} Symptom: an
+  edit to
+  \texttt{\textasciitilde{}/dotfiles/launchd/local.backup.research.plist}
+  does not change the running job, because \texttt{install.sh}
+  sed-substitutes \texttt{\_\_USER\_\_} to \texttt{\$USER} when writing
+  to \texttt{\textasciitilde{}/Library/LaunchAgents/}, and the active
+  plist is the substituted copy. Fix: do not edit the active plist
+  directly; edit the source in
+  \texttt{\textasciitilde{}/dotfiles/launchd/}, then re-run
+  \texttt{install.sh} plus \texttt{launchctl\ bootout} and
+  \texttt{launchctl\ bootstrap}.
+\item
+  \textbf{Project content includes runtime artefacts that should not
+  move.} Symptom: a 200 MB \texttt{renv/library/} directory comes along
+  with a project move and now lives at
+  \texttt{\textasciitilde{}/prj/\textless{}project\textgreater{}/renv/library/},
+  where renv expects to manage it. Fix: confirm \texttt{.gitignore}
+  excludes the right paths before pushing; add \texttt{**/renv/library/}
+  to the dotfiles repo's \texttt{.gitignore} if one is accidentally
+  tracked.
+\item
+  \textbf{In-place editors race with cloud sync and truncate files to
+  zero bytes.} Symptom: \texttt{sed\ -i.bak\ file},
+  \texttt{awk\ -i\ inplace}, or \texttt{perl\ -i} against a path under
+  \texttt{\textasciitilde{}/Library/CloudStorage/...} returns 0 but
+  leaves the file empty. The \texttt{.bak} saved by \texttt{-i.bak} is
+  also placed in cloud storage and is subject to the same race; on the
+  incident that produced this gotcha, both the file and its backup were
+  lost locally and required Dropbox version-history restore. Fix: never
+  run \texttt{-i}-style editors on cloud-mounted paths. Either use the
+  Edit tool / a real editor, or copy to \texttt{/tmp}, edit, and
+  \texttt{mv} back. (If the dotfiles repo is on a non-synced path per
+  gotcha 2, this hazard is confined to scripts that touch
+  \texttt{\textasciitilde{}/Library/CloudStorage/...} from elsewhere.)
+\end{enumerate}
+
+\section{Uninstall / Rollback}\label{uninstall-rollback}
+
+The most common `undo' is not `reinstall Dropbox' but `put project
+content back under Dropbox while keeping dotfiles independent'. The
+architecture supports this directly because the layers are independent.
+
+To roll project content back into Dropbox:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Move \texttt{\textasciitilde{}/prj/\textless{}project\textgreater{}/}
+  back to
+  \texttt{\textasciitilde{}/Dropbox/prj/\textless{}project\textgreater{}/}.
+\item
+  Update \texttt{\textasciitilde{}/.zshenv} so \texttt{PRJ\_ROOT}
+  resolves to the Dropbox path.
+\item
+  The dotfiles repo, backup scripts, and launchd plists do not need any
+  change because they reference \texttt{\$PRJ\_ROOT}.
+\end{enumerate}
+
+This is also the recommended path for a reader who completed the
+dotfiles work but is not yet ready to migrate project content. Set up
+the env var, leave the path pointing at Dropbox, defer the project move
+until later.
+
+To roll back the entire migration: the dotfiles installer's
+\texttt{-\/-dry-run} should never have shipped destructively, so the
+rollback is just \texttt{rm\ -rf\ \textasciitilde{}/dotfiles} plus
+restoring \texttt{\$HOME} from a Time Machine backup. Most readers will
+not need this.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{media/images/ambiance3.jpg}
+
+}
+
+\caption{A closed wooden chest with three small brass clasps on a stone
+surface, an open notebook and a capped fountain pen beside it,
+suggesting a deliberate and completed reorganisation.}
+
+\end{figure}%
+
+\section{What Did We Learn?}\label{what-did-we-learn}
+
+\subsection{Lessons Learnt}\label{lessons-learnt}
+
+\textbf{Conceptual:}
+
+\begin{itemize}
+\tightlist
+\item
+  The `sync everything via one cloud provider' default conflates three
+  independent concerns. Separating them makes each easier to reason
+  about.
+\item
+  Migration sequencing matters more than mechanism choice. The wrong
+  mechanism is correctable; a half-migrated workflow is hard to leave
+  for a year.
+\item
+  Per-machine state is a feature, not a bug, for many file types. The
+  right answer for shell history is often `do not sync', not `sync
+  better'.
+\end{itemize}
+
+\textbf{Technical:}
+
+\begin{itemize}
+\tightlist
+\item
+  A single environment variable (\texttt{\$PRJ\_ROOT}) provides enough
+  indirection to migrate path references in two passes: first introduce
+  the variable while it still resolves to Dropbox, then change what it
+  resolves to.
+\item
+  launchd plists with \texttt{\_\_USER\_\_} placeholders deploy cleanly
+  across machines via \texttt{install.sh} sed-substitution;
+  bootstrapping the substituted copy avoids machine-specific files in
+  the dotfiles repo.
+\item
+  Atomic git operations on a non-synced filesystem are reliable; the
+  same operations on a cloud-synced filesystem race with the sync engine
+  and produce subtle corruption.
+\end{itemize}
+
+\textbf{Gotchas:}
+
+\begin{itemize}
+\tightlist
+\item
+  `rclone sync exits 0' does not mean the sync succeeded; it can mean
+  the source had nothing to send because the path is wrong.
+\item
+  A symlink created on one machine resolves correctly on that machine
+  but may dangle on another. Always test the new-machine case.
+\item
+  Conflict copies of append-only files accumulate silently. Periodic
+  auditing is the only way to notice.
+\end{itemize}
+
+\subsection{Limitations}\label{limitations}
+
+\begin{itemize}
+\tightlist
+\item
+  The migration described here covers a single-user workflow. Team
+  setups (where the same Dropbox folder is shared with collaborators)
+  need additional considerations not addressed in this post.
+\item
+  Project content moved from Dropbox to per-project git remotes is now
+  subject to GitHub or GitLab quotas, including LFS limits for binary
+  files. Plan accordingly.
+\item
+  The decision worksheet is a generic framework; it does not generate
+  scripts for any particular sync mechanism. Each reader still has to
+  write the rclone or rsync commands for their setup.
+\item
+  Append-aware history sync (option 3) requires either an existing tool
+  (atuin works for shell history) or hand-rolled mergers for proprietary
+  log formats. The post does not provide those mergers.
+\item
+  Migrating off Dropbox does not, by itself, improve the security
+  posture of credentials. Files like
+  \texttt{\textasciitilde{}/.aws/credentials} should be addressed
+  separately; cloud sync was not their only exposure.
+\item
+  The post assumes macOS or Linux. Windows-specific path conventions and
+  sync semantics are out of scope.
+\end{itemize}
+
+\subsection{Opportunities for
+Improvement}\label{opportunities-for-improvement}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Extend the decision worksheet into a small CLI tool that audits a
+  current setup and generates a draft migration plan.
+\item
+  Build an atuin (or atuin-equivalent) integration template for the
+  dotfiles repo, so option 3 from layer 3 becomes a one-line opt-in.
+\item
+  Add a \texttt{verify.sh} to the dotfiles repo that runs the end-to-end
+  check (dotfiles installed, \texttt{\$PRJ\_ROOT} valid, backup scripts
+  pointing at it, launchd jobs loaded) on demand and reports pass/fail.
+\item
+  Document a canonical `two-laptop' setup with Syncthing replacing the
+  Dropbox role for shared project content.
+\item
+  Generalise the worksheet's mechanism table into a maintained list (a
+  small repo or a wiki page) that adds new tools as the ecosystem
+  evolves (Filen, S3-backed, etc.).
+\end{enumerate}
+
+\section{Wrapping Up}\label{wrapping-up}
+
+A portable dotfiles repository is the first half of a Dropbox-free
+workflow; this post is the framework for the second half. The key idea:
+stop treating sync as a single dimension and start treating it as three
+layers (configuration, project content, append-only history) with
+different semantics and different right answers.
+
+Most of the work is in the inventory and decision step, not in the moves
+themselves. Once each artefact is classified and each layer has a chosen
+mechanism, the actual migration is a sequence of small file moves and a
+few text edits. The pieces that take time are testing the new-machine
+bootstrap, deciding what to do about history files, and resisting the
+temptation to migrate everything in one weekend.
+
+\subsection{Expected outcomes}\label{expected-outcomes}
+
+The architecture aims to deliver three measurable end states. The first
+is verifiable now (Layer 1 is complete on the author's primary laptop);
+the other two will be confirmed and updated with measured numbers when
+Layer 2 and Layer 3 land.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{New-laptop setup} is
+  \texttt{git\ clone\ …\ \textasciitilde{}/dotfiles\ \&\&\ ./install.sh\ \&\&\ (per-project\ git\ clones)}.
+  The plan budget is roughly 30 minutes from clean machine to working
+  environment; the actual figure will be added after a fresh-VM
+  bootstrap is run.
+\item
+  \textbf{Conflict copies of \texttt{history.jsonl} and similar files}
+  should stop recurring once the affected files are moved out of Dropbox
+  sync. The post will be updated with the post-migration count once
+  Layer 3 is applied.
+\item
+  \textbf{Backup pipelines} will source from \texttt{\$PRJ\_ROOT}, which
+  can point anywhere; once Layer 2 lands, Dropbox is no longer
+  load-bearing for the workflow.
+\end{itemize}
+
+In conclusion, four points merit emphasis. First, the dotfiles layer is
+the wedge, not the goal; once it is in place, the rest of the migration
+is mechanical. Second, `project content' is two layers in disguise
+(code, which wants git, and data, which wants something else); the two
+should be separated before a mechanism is chosen. Third, some of what
+looks like `data' is actually a local cache of an authoritative source
+elsewhere (Maildir from IMAP, Homebrew cache, language-server indexes);
+for these the right answer is not to sync at all, but to rebuild on each
+machine from the canonical source. Fourth, append-only files are the
+only category that benefits from sophisticated sync; for everything
+else, simpler is better.
+
+\section{See Also}\label{see-also}
+
+\begin{itemize}
+\tightlist
+\item
+  Post 24,
+  \href{https://focusonr.org/posts/24-setupdotfilesongithub/}{Creating a
+  GitHub Dotfiles Repository} --- the prerequisite. This post is its
+  sequel.
+\item
+  Post 65,
+  \href{https://focusonr.org/posts/65-multi-laptop-bootstrap/}{Multi-Laptop
+  Bootstrap: Dotfiles Repository} --- the next post in this series;
+  implements the dotfiles layer with \texttt{install.sh},
+  \texttt{Makefile}, and a sensitive-files inventory.
+\item
+  Post 66, \href{https://focusonr.org/posts/66-unix-pass-setup/}{Setting
+  Up pass, the Unix Password Manager} --- covers GPG key generation,
+  pass initialisation, and migrating credentials identified in this
+  post's Layer 1 inventory.
+\item
+  Post 67,
+  \href{https://focusonr.org/posts/67-multi-laptop-security/}{Multi-Laptop
+  Security: Hardening the Bootstrap} --- a security audit of the full
+  infrastructure established across posts 64-66.
+\item
+  Post 20,
+  \href{https://focusonr.org/posts/20-researchbackupsystem/}{Setting Up
+  a Comprehensive Research Backup System on macOS} --- three-tier backup
+  architecture; most of the relevant launchd-plist patterns originate
+  there.
+\item
+  Post 22,
+  \href{https://focusonr.org/posts/22-serversetupawscli/}{Launching AWS
+  EC2 Instances with Bash Scripts and the AWS CLI} --- the worked
+  example of \texttt{\_\_USER\_\_} substitution and CLI-driven
+  deployment.
+\item
+  \texttt{MULTI\_LAPTOP\_PLAN.md} (in the dotfiles repository) --- the
+  live action plan tracking this migration, with done-marks and effort
+  estimates for each step. \texttt{MIGRATION\_NOTES.md} in the same
+  repository captures what was copied and what was deliberately excluded
+  during the Layer 1 move.
+\item
+  \href{https://docs.syncthing.net/}{Syncthing documentation} ---
+  peer-to-peer sync, the most-recommended Dropbox replacement for
+  project content.
+\item
+  \href{https://atuin.sh/}{Atuin} --- the cleanest answer to `I want my
+  shell history across machines'; an example of append-aware sync done
+  right.
+\item
+  \href{https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html}{The
+  XDG Base Directory Specification} --- the underlying convention that
+  determines where each XDG-aware tool actually puts its files; relevant
+  when choosing between \texttt{\textasciitilde{}/.cache},
+  \texttt{\textasciitilde{}/.local/share}, and
+  \texttt{\textasciitilde{}/.local/state}.
+\end{itemize}
+
+\section{Reproducibility}\label{reproducibility}
+
+Tested on:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Component & Version \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+OS & macOS 15.4 (Sequoia) \\
+Shell & zsh 5.9 \\
+git & 2.45 \\
+rclone & 1.68 \\
+Syncthing & 1.27 \\
+flock (homebrew) & 2.40 \\
+Date verified & 2026-05-07 \\
+\end{longtable}
+
+The decision worksheet is a generic Quarto document and does not depend
+on any particular tool versions; the table above captures the
+environment in which the framework was developed and validated.
+
+\section{Let's Connect}\label{lets-connect}
+
+I would enjoy hearing from you if:
+
+\begin{itemize}
+\tightlist
+\item
+  You have made the same migration with different sync-mechanism choices
+  and want to compare notes.
+\item
+  You see a gotcha I missed, especially in the append-only-history
+  layer.
+\item
+  You use Linux or Windows and want to extend the worksheet to your
+  environment.
+\item
+  You just want to say hello and connect.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\emph{Rendered on 2026-05-08 at 06:10 PDT.} \emph{Source:
+\textasciitilde/Dropbox/prj/qblog/posts/64-migrating-off-dropbox/migrating-off-dropbox/analysis/report/index.qmd}
+
+\subsection{Related posts in this
+cluster}\label{related-posts-in-this-cluster}
+
+This post is part of the \emph{Security, Backup, and Sync} series.
+Recommended reading order:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Post 31: \href{../31-sec-three-tier-backup-architecture/}{Research
+  Backup Architecture}
+\item
+  \textbf{Post 32: Migrating Off Dropbox: Beyond Dotfiles} (this post)
+\item
+  Post 33: \href{../33-sec-pass-password-manager/}{Setting Up pass: a
+  Unix Password Manager}
+\item
+  Post 34: \href{../34-sec-aws-and-pass-secrets/}{Secrets Management for
+  the Workflow Construct}
+\item
+  Post 35: \href{../35-sec-multi-laptop-threat-model/}{Security
+  Foundations for a Multi-Laptop Research Cluster}
+\end{enumerate}
+
+
+
+\end{document}
