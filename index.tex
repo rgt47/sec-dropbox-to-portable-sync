@@ -136,6 +136,8 @@
 \makeatother
 
 \usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{adjustbox}
 \pagestyle{fancy}
 \fancyhead[L]{Thomas Lab}
 \fancyhead[R]{\thepage}
@@ -207,7 +209,7 @@
 \makeatletter
 \makeatother
 \makeatletter
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, sharp corners, frame hidden, interior hidden, enhanced, breakable]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[frame hidden, enhanced, boxrule=0pt, sharp corners, interior hidden, breakable]}{\end{tcolorbox}}\fi
 \makeatother
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
@@ -250,7 +252,7 @@ ones.}
 \emph{A portable dotfiles repository is only the first half of leaving
 Dropbox. The other half is the rest of the workflow.}
 
-\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, left=2mm, rightrule=.15mm, opacityback=0, coltitle=black, colframe=quarto-callout-note-color-frame, bottomtitle=1mm, opacitybacktitle=0.6, breakable, bottomrule=.15mm, titlerule=0mm, leftrule=.75mm, toprule=.15mm, toptitle=1mm, arc=.35mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}]
+\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, titlerule=0mm, left=2mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colframe=quarto-callout-note-color-frame, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, toprule=.15mm, breakable, leftrule=.75mm, bottomtitle=1mm, arc=.35mm, toptitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, coltitle=black]
 
 \textbf{Multi-Machine Setup Series} (recommended reading order):
 \href{../../../posts/64-migrating-off-dropbox/}{Part 1: Migrating off
@@ -290,7 +292,7 @@ current state to a concrete migration plan. The choice of whether to
 leave Dropbox at all is left to the reader; this post is about doing it
 deliberately rather than partially.
 
-\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, left=2mm, rightrule=.15mm, opacityback=0, coltitle=black, colframe=quarto-callout-note-color-frame, bottomtitle=1mm, opacitybacktitle=0.6, breakable, bottomrule=.15mm, titlerule=0mm, leftrule=.75mm, toprule=.15mm, toptitle=1mm, arc=.35mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Status of this migration}]
+\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, titlerule=0mm, left=2mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Status of this migration}, colframe=quarto-callout-note-color-frame, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, toprule=.15mm, breakable, leftrule=.75mm, bottomtitle=1mm, arc=.35mm, toptitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, coltitle=black]
 
 This post documents an ongoing migration on the author's own setup. At
 time of writing, Layer 1 (dotfiles) is complete: the repository exists
