@@ -13,7 +13,7 @@ description: >
   through trade-offs for each.
 image: 'media/images/hero.png'
 document-type: 'blog'
-draft: false
+draft: true
 execute:
   echo: true
   warning: false
@@ -47,7 +47,7 @@ YAML FRONT MATTER (lines 1-20)
   [x] categories      — workflow, sync, migration, dropbox
   [x] description     — set
   [x] image           — media/images/hero.png (Imagen 3, 2026-05-07)
-  [x] draft: false    — flip when imagery in place and render verified
+  [x] draft: true    — flip when imagery in place and render verified
 
 NARRATIVE INPUTS
   [x] Hook sentence   — 'I did not really appreciate how much of my
@@ -154,7 +154,7 @@ This post documents the author's own migration. If errors are
 spotted or better approaches are known, the comment thread below
 is the right place to note them.
 
-![A wooden desk seen from above with three small index cards arranged in a horizontal row, each card showing a hand-drawn symbol, suggesting classification before action.](media/images/ambiance1.jpg){.img-fluid}
+![A wooden desk seen from above with three small index cards arranged in a horizontal row, each card showing a hand-drawn symbol, suggesting classification before action.](media/images/ambiance1.png){.img-fluid}
 
 # What is the Problem?
 
@@ -356,7 +356,7 @@ leaves a working pilot with the backup pipeline intact. Stopping
 after step 5 leaves the workflow independent; the history-file
 decision can be deferred.
 
-![Two open-top boxes side by side on a workbench, the left box full of mixed objects and the right box divided into three sorted compartments, with a single object mid-transfer between them.](media/images/ambiance2.jpg){.img-fluid}
+![Two open-top boxes side by side on a workbench, the left box full of mixed objects and the right box divided into three sorted compartments, with a single object mid-transfer between them.](media/images/ambiance2.png){.img-fluid}
 
 # Things to Watch Out For
 
@@ -390,7 +390,7 @@ This is also the recommended path for a reader who completed the dotfiles work b
 
 To roll back the entire migration: the dotfiles installer's `--dry-run` should never have shipped destructively, so the rollback is just `rm -rf ~/dotfiles` plus restoring `$HOME` from a Time Machine backup. Most readers will not need this.
 
-![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganisation.](media/images/ambiance3.jpg){.img-fluid}
+![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganisation.](media/images/ambiance3.png){.img-fluid}
 
 # What Did We Learn?
 
@@ -502,7 +502,7 @@ I would enjoy hearing from you if:
 *Source: ~/Dropbox/prj/qblog/posts/64-migrating-off-dropbox/migrating-off-dropbox/analysis/report/index.qmd*
 
 <!-- ============================================================================
-PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
+PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: true
 
 This is the verification pass that mirrors the AUTHOR PROVIDES list at the
 top of this file. If anything below is unchecked, the post is not ready.
@@ -510,7 +510,7 @@ top of this file. If anything below is unchecked, the post is not ready.
 [ ] YAML
     [ ] title, subtitle, date, categories, description, image filled in
     [x] document-type: 'blog'
-    [x] draft: false
+    [x] draft: true
 
 [ ] Narrative complete (no remaining `[bracketed]` placeholders)
     [ ] grep '\[' index.qmd returns only legitimate code/links
