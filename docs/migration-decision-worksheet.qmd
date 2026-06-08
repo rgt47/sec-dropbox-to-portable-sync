@@ -1,7 +1,7 @@
 ---
 title: 'Migration Decision Worksheet'
 subtitle: 'A four-step worksheet for migrating a single-user workflow off Dropbox.'
-author: "Ronald 'Ryy' G. Thomas"
+author: "Ronald G. Thomas"
 date: '2026-05-07'
 format:
   html:

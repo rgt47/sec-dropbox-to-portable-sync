@@ -1,6 +1,6 @@
 ---
 title: 'Migrating Off Dropbox: Beyond Dotfiles'
-author: "Ronald 'Ryy' G. Thomas"
+author: "Ronald G. Thomas"
 date: '2026-05-07'
 categories: [workflow, sync, migration, dropbox]
 description: >
