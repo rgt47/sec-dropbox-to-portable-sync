@@ -2,7 +2,7 @@ Package: migrating.off.dropbox
 Title: Migrating Off Dropbox: Beyond Dotfiles
 Version: 0.0.0.9000
 Authors@R:
-    person("Ronald", "G. Thomas", email = "rgthomas47@gmail.com",
+    person("Ronald G.", "Thomas", email = "rgthomas@ucsd.edu",
            role = c("aut", "cre"))
 Description: Companion compendium for the blog post 'Migrating Off
     Dropbox: Beyond Dotfiles', a sequel to post 24 ('Creating a
