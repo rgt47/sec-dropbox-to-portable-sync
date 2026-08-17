@@ -1,31 +1,16 @@
 ---
-title: 'Migrating Off Dropbox: Beyond Dotfiles'
+title: "Migrating Off Dropbox: Beyond Dotfiles"
 author: "Ronald G. Thomas"
-date: '2026-05-07'
+date: "2026-05-07"
 categories: [workflow, sync, migration, dropbox]
-description: >
-  Post 24 establishes a portable dotfiles repository.
-  This post extends the same goal to the rest of a
-  single-user research workflow: project content,
-  backup-pipeline source paths, and the append-only
-  history files that Dropbox handles particularly
-  badly. Frames the problem as three layers and walks
-  through trade-offs for each.
-image: 'media/images/hero.png'
-document-type: 'blog'
+description: "Post 24 establishes a portable dotfiles repository. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
+image: "media/images/hero.png"
+document-type: "blog"
 draft: true
 execute:
   echo: true
   warning: false
   message: false
-format:
-  pdf:
-    pdf-engine: xelatex
-    monofont: 'DejaVu Sans Mono'
-    geometry: margin=1in
-    fontsize: 11pt
-    toc: false
-
 cluster: security-and-sync
 cluster-order: 2
 ---
@@ -151,7 +136,7 @@ This post documents the author's own migration. If errors are
 spotted or better approaches are known, the comment thread below
 is the right place to note them.
 
-![A wooden desk seen from above with three small index cards arranged in a horizontal row, each card showing a hand-drawn symbol, suggesting classification before action.](media/images/ambiance1.png){.img-fluid}
+![A wooden desk seen from above with three small index cards arranged in a horizontal row, each card showing a hand-drawn symbol, suggesting classification before action.](media/images/ambiance1.png){.img-fluid height=3.5in}
 
 # What is the Problem?
 
@@ -353,7 +338,7 @@ leaves a working pilot with the backup pipeline intact. Stopping
 after step 5 leaves the workflow independent; the history-file
 decision can be deferred.
 
-![Two open-top boxes side by side on a workbench, the left box full of mixed objects and the right box divided into three sorted compartments, with a single object mid-transfer between them.](media/images/ambiance2.png){.img-fluid}
+![Two open-top boxes side by side on a workbench, the left box full of mixed objects and the right box divided into three sorted compartments, with a single object mid-transfer between them.](media/images/ambiance2.png){.img-fluid height=3.5in}
 
 # Things to Watch Out For
 
@@ -387,7 +372,7 @@ This is also the recommended path for a reader who completed the dotfiles work b
 
 To roll back the entire migration: the dotfiles installer's `--dry-run` should never have shipped destructively, so the rollback is just `rm -rf ~/dotfiles` plus restoring `$HOME` from a Time Machine backup. Most readers will not need this.
 
-![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganisation.](media/images/ambiance3.png){.img-fluid}
+![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganisation.](media/images/ambiance3.png){.img-fluid height=3.5in}
 
 # What Did We Learn?
 
