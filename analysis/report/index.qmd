@@ -3,7 +3,7 @@ title: "Migrating Off Dropbox: Beyond Dotfiles"
 author: "Ronald G. Thomas"
 date: "2026-05-07"
 categories: [workflow, sync, migration, dropbox]
-description: "Post 24 establishes a portable dotfiles repository. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
+description: "A portable dotfiles repository is only the first step. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
 image: "media/images/hero.png"
 document-type: "blog"
 draft: true
@@ -45,7 +45,7 @@ NARRATIVE INPUTS
   [x] Limitations     — six bullets
   [x] Opportunities for Improvement — five next steps
   [x] Wrapping Up     — conclusion + main takeaways
-  [x] See Also        — post 24, post 20, plus key external links
+  [x] See Also        — key external links
 
 CONFIGURATION DELIVERABLES (real, working artifacts, not snippets)
   [x] Prerequisites list — listed in body
@@ -83,20 +83,13 @@ HERO IMAGE
 
 *A portable dotfiles repository is only the first half of leaving Dropbox. The other half is the rest of the workflow.*
 
-::: {.callout-note}
-**Multi-Machine Setup Series** (recommended reading order):
-[Part 1: Migrating off Dropbox](/posts/64-migrating-off-dropbox/) |
-[Part 2: Multi-Laptop Bootstrap](/posts/65-multi-laptop-bootstrap/) |
-[Part 3: Security Audit](/posts/67-multi-laptop-security/)
-:::
-
 # Introduction
 
-I did not really appreciate how much of my daily workflow depended on Dropbox until I tried to leave it. The dotfiles migration described in [post 24](https://focusonr.org/posts/24-setupdotfilesongithub/) is the obvious half: pull the configuration files out of a cloud-mounted directory, put them under git, write an installer that creates symlinks. Once that work is committed, every dotfile in `$HOME` becomes version-controlled and reproducible on a new laptop with two commands.
+I did not really appreciate how much of my daily workflow depended on Dropbox until I tried to leave it. Migrating dotfiles is the obvious half: pull the configuration files out of a cloud-mounted directory, put them under git, write an installer that creates symlinks. Once that work is committed, every dotfile in `$HOME` becomes version-controlled and reproducible on a new laptop with two commands.
 
 The non-obvious half is everything else. The dotfiles deploy cleanly on a fresh machine, then the new shell tries to `cd ~/prj/some-project` and fails because the project tree still lives at `~/Library/CloudStorage/Dropbox/prj/`. Backup scripts hardcode the same Dropbox path. AI-tool history files live under a Dropbox-synced symlink and accumulate conflict copies on every overlapping write between machines. The configuration is portable; the workflow is not.
 
-This post is the second half of post 24. It frames the problem as three independent layers (dotfiles, project content, append-only history), surveys the sync mechanisms each layer can use, and walks through a migration sequence that does not break a running pipeline mid-move. The companion deliverable is a decision worksheet that takes a reader from current state to a concrete migration plan. The choice of whether to leave Dropbox at all is left to the reader; this post is about doing it deliberately rather than partially.
+This post frames the problem as three independent layers (dotfiles, project content, append-only history), surveys the sync mechanisms each layer can use, and walks through a migration sequence that does not break a running pipeline mid-move. The companion deliverable is a decision worksheet that takes a reader from current state to a concrete migration plan. The choice of whether to leave Dropbox at all is left to the reader; this post is about doing it deliberately rather than partially.
 
 ::: {.callout-note}
 ## Status of this migration
@@ -155,7 +148,7 @@ A concrete example from this migration: the file `~/.claude/history.jsonl` is an
 This post assumes:
 
 - **Operating system:** macOS 13+ or a recent Linux distribution. The sync-mechanism table is applicable to both, but specific path conventions reference macOS.
-- **Already in place:** a working dotfiles repository per [post 24](https://focusonr.org/posts/24-setupdotfilesongithub/). The architecture below builds on that foundation; without it, half the moves cannot be made cleanly.
+- **Already in place:** a working dotfiles repository, migrated to git and out of any cloud-mounted path. The architecture below builds on that foundation; without it, half the moves cannot be made cleanly.
 - **Background knowledge:** comfort with git remotes, basic launchd plist structure, rclone or rsync at the level of a single sync command. The post does not require expertise in any of these.
 - **Hardware:** a single primary laptop is sufficient. A second machine (or VM) is useful for the migration's verification step but is not required.
 - **Time required:** about a day's careful work to inventory and decide; about a half-day to execute the moves once the decisions are made.
@@ -171,11 +164,11 @@ Treat the workflow as three layers. Each layer has its own sync semantics, its o
 
 ## Layer 1: Dotfiles distribution
 
-Solved by post 24. The summary, for reference: configuration files live in a git repository at `~/dotfiles/` (outside any cloud-mounted path), an `install.sh` creates symlinks into `$HOME` per machine, secrets stay out of the repository entirely. New-machine bootstrap is `git clone … ~/dotfiles && cd ~/dotfiles && ./install.sh`.
+Assumed already solved, per the prerequisites above. The summary, for reference: configuration files live in a git repository at `~/dotfiles/` (outside any cloud-mounted path), an `install.sh` creates symlinks into `$HOME` per machine, secrets stay out of the repository entirely. New-machine bootstrap is `git clone … ~/dotfiles && cd ~/dotfiles && ./install.sh`.
 
 This layer is the easiest to migrate because the files are small, change infrequently, and are nearly always edited from a single machine. Git handles the multi-machine merge cleanly when overlap does occur.
 
-What post 24 explicitly does not address: project content (the next layer), backup-pipeline source paths (also next layer), and append-only history (the third layer). Those failures show up only after the dotfiles layer is migrated, which is why this post exists.
+What a dotfiles migration on its own does not address: project content (the next layer), backup-pipeline source paths (also next layer), and append-only history (the third layer). Those failures show up only after the dotfiles layer is migrated, which is why this post exists.
 
 ## Layer 2: Project content sync
 
@@ -300,11 +293,11 @@ The right choice depends on the user. Most readers will be happiest with option 
 
 The companion deliverable for this post is a Quarto document at `docs/migration-decision-worksheet.qmd`. It walks the reader through:
 
-1. **Inventory.** List every sync-relevant artefact in `$HOME` and `~/Dropbox/`. Classify each into one of the three layers.
+1. **Inventory.** List every sync-relevant artifact in `$HOME` and `~/Dropbox/`. Classify each into one of the three layers.
 2. **Mechanism selection.** For each layer, pick a sync mechanism (or 'no sync, per-machine') from the table above.
 3. **Migration order.** Sequence the moves so the backup pipeline
    never points at a stale path. The general rule is: dotfiles
-   first (already done if post 24 was followed), then a single
+   first (already done per the prerequisites above), then a single
    project as a pilot, then the rest of project content, then
    history files.
 4. **Verification.** Bootstrap a clean user account or VM and confirm the full workflow comes up without Dropbox.
@@ -318,7 +311,7 @@ moves rather than a single large rewrite.
 
 The order of operations matters because the backup pipeline must remain valid at every intermediate step. The sequence below comes from running this migration on a real workflow.
 
-1. **Confirm dotfiles foundation.** Verify post 24's repository works. Run `install.sh --dry-run` on a clean account or VM. Resolve any failures before proceeding.
+1. **Confirm dotfiles foundation.** Verify the dotfiles repository works. Run `install.sh --dry-run` on a clean account or VM. Resolve any failures before proceeding.
 2. **Introduce a path-abstraction env var.** Add `PRJ_ROOT` to `~/.zshenv` with a fallback that resolves to `~/Dropbox/prj` for now. Replace literal `~/Dropbox/prj` references in scripts and configs with `$PRJ_ROOT`. Nothing visible changes, but the next move is now a single-line edit.
 3. **Pilot one project.** Pick a single small repo. Move it from `~/Dropbox/prj/<project>/` to `~/prj/<project>/` (real path, outside cloud). Push to a private git remote if it is not already. Confirm the workflow on it.
 4. **Migrate the rest of project content in batches.** A batch a day prevents the backup pipeline from going stale. For each batch: move, repoint any in-script paths, push to remotes, verify.
@@ -442,12 +435,6 @@ everything else, simpler is better.
 
 # See Also
 
-- Post 24, [Creating a GitHub Dotfiles Repository](https://focusonr.org/posts/24-setupdotfilesongithub/) — the prerequisite. This post is its sequel.
-- Post 65, [Multi-Laptop Bootstrap: Dotfiles Repository](https://focusonr.org/posts/65-multi-laptop-bootstrap/) — the next post in this series; implements the dotfiles layer with `install.sh`, `Makefile`, and a sensitive-files inventory.
-- Post 66, [Setting Up pass, the Unix Password Manager](https://focusonr.org/posts/66-unix-pass-setup/) — covers GPG key generation, pass initialisation, and migrating credentials identified in this post's Layer 1 inventory.
-- Post 67, [Multi-Laptop Security: Hardening the Bootstrap](https://focusonr.org/posts/67-multi-laptop-security/) — a security audit of the full infrastructure established across posts 64-66.
-- Post 20, [Setting Up a Comprehensive Research Backup System on macOS](https://focusonr.org/posts/20-researchbackupsystem/) — three-tier backup architecture; most of the relevant launchd-plist patterns originate there.
-- Post 22, [Launching AWS EC2 Instances with Bash Scripts and the AWS CLI](https://focusonr.org/posts/22-serversetupawscli/) — the worked example of `__USER__` substitution and CLI-driven deployment.
 - `MULTI_LAPTOP_PLAN.md` (in the dotfiles repository) — the live action plan tracking this migration, with done-marks and effort estimates for each step. `MIGRATION_NOTES.md` in the same repository captures what was copied and what was deliberately excluded during the Layer 1 move.
 - [Syncthing documentation](https://docs.syncthing.net/) — peer-to-peer sync, the most-recommended Dropbox replacement for project content.
 - [Atuin](https://atuin.sh/) — the cleanest answer to 'I want my shell history across machines'; an example of append-aware sync done right.
