@@ -468,7 +468,7 @@ I would enjoy hearing from you if:
 ---
 
 *Rendered on 2026-05-08 at 06:10 PDT.*<br>
-*Source: ~/Dropbox/prj/qblog/posts/64-migrating-off-dropbox/migrating-off-dropbox/analysis/report/index.qmd*
+*Source: ~/prj/rgtlab/posts/sec-dropbox-to-portable-sync/index.qmd*
 
 <!-- ============================================================================
 PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
