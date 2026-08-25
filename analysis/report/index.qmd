@@ -533,8 +533,8 @@ Dropbox. It picks up after the dotfiles work described in
 and pairs with the *Security, Backup, and Sync* series for readers
 who do need it:
 
-- Post 31: [Research Backup Architecture](../31-sec-three-tier-backup-architecture/)
-- Post 33: [Setting Up pass: a Unix Password Manager](../33-sec-pass-password-manager/)
-- Post 34: [Secrets Management for the Workflow Construct](../34-sec-aws-and-pass-secrets/)
-5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../35-sec-multi-laptop-threat-model/)
+- Post 31: [Research Backup Architecture](../sec-three-tier-backup-architecture/)
+- Post 33: [Setting Up pass: a Unix Password Manager](../sec-pass-password-manager/)
+- Post 34: [Secrets Management for the Workflow Construct](../sec-aws-and-pass-secrets/)
+5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../sec-multi-laptop-threat-model/)
 
