@@ -109,18 +109,18 @@ dotfiles repository as `MULTI_LAPTOP_PLAN.md`.
 
 ## Motivations
 
-- A new laptop bootstrap should be a one-command operation. Today, after running the dotfiles installer, half the workflow still requires installing Dropbox, signing in, and waiting for several gigabytes to materialise before anything functional happens.
+- A new laptop bootstrap should be a one-command operation. Today, after running the dotfiles installer, half the workflow still requires installing Dropbox, signing in, and waiting for several gigabytes to materialize before anything functional happens.
 - Dropbox sync of append-only files (shell history, AI-tool history, editor undo files) routinely produces conflict copies on multi-machine setups. The 12 conflict copies of `history.jsonl` discovered in this account on 2026-05-02 are one symptom of an architectural mismatch.
-- Project content directories under Dropbox commingle with cloud-only artefacts that should not be synced (model output, large derived data, machine-specific caches). Excluding them via `.dropboxignore` is fragile and error-prone.
-- The set of services that compete for `$HOME` (Dropbox, iCloud Drive, Google Drive, OneDrive) keeps growing, and choosing one default for everything is increasingly suboptimal as each service specialises.
+- Project content directories under Dropbox commingle with cloud-only artifacts that should not be synced (model output, large derived data, machine-specific caches). Excluding them via `.dropboxignore` is fragile and error-prone.
+- The set of services that compete for `$HOME` (Dropbox, iCloud Drive, Google Drive, OneDrive) keeps growing, and choosing one default for everything is increasingly suboptimal as each service specializes.
 - The work to reach 'workflow independence' is largely the same
-  work as 'workflow modernisation': separating concerns by layer,
+  work as 'workflow modernization': separating concerns by layer,
   choosing sync mechanisms that match each layer's semantics, and
   documenting each move so it can be audited later.
 
 ## Objectives
 
-1. Inventory the workflow against three layers (dotfiles, project content, append-only history) and classify every sync-relevant artefact into exactly one layer.
+1. Inventory the workflow against three layers (dotfiles, project content, append-only history) and classify every sync-relevant artifact into exactly one layer.
 2. Produce a decision worksheet that, for each layer, names the candidate sync mechanisms and the trade-offs that distinguish them.
 3. Sequence the migration so that the backup pipeline never points at a stale source path and the launchd jobs stay valid throughout the move.
 4. Establish a fresh-machine bootstrap that does not require Dropbox and verifies the entire workflow end to end.
@@ -136,7 +136,7 @@ is the right place to note them.
 The problem is that 'sync everything via one cloud provider' was a reasonable default in 2014, when Dropbox was the only practical option for arbitrary file sync, but it now bundles three semantically distinct concerns into a single mechanism. The three concerns:
 
 - **Configuration distribution** wants version history, atomic deploys, and the ability to roll back. Git solves this; cloud sync only approximates it.
-- **Project content sync** wants block-level diffs for large files, conflict semantics that match the file format, and the option to exclude derived artefacts. Different sync mechanisms handle these very differently.
+- **Project content sync** wants block-level diffs for large files, conflict semantics that match the file format, and the option to exclude derived artifacts. Different sync mechanisms handle these very differently.
 - **Append-only history** wants either single-machine writes or a sync mechanism that understands append semantics. Cloud sync writes the whole file on every change and produces a conflict copy on every overlap.
 
 A useful analogy: it is the same reason a research compendium separates `data/`, `R/`, and `analysis/`. Each directory has different rules about what changes, how it changes, and who is allowed to change it. Lumping them all into one sync mechanism enforces no useful constraint and produces friction at the boundary.
@@ -179,7 +179,7 @@ Project content has different sync characteristics from dotfiles:
 - It is much larger (tens of GB is typical).
 - It contains both small text (R, Quarto) and large binary (data, figures, PDFs).
 - It changes frequently, often on a single machine within a session.
-- It includes derived artefacts that should not be synced at all (renv libraries, model output, caches).
+- It includes derived artifacts that should not be synced at all (renv libraries, model output, caches).
 
 The candidate sync mechanisms, with the dimensions that matter:
 
@@ -191,7 +191,7 @@ The candidate sync mechanisms, with the dimensions that matter:
 | **iCloud Drive (native macOS)** | Tight macOS integration, included with Apple ID | macOS-only; opaque sync timing; cannot exclude subdirectories cleanly |
 | **Google Drive (rclone or native)** | Effectively unlimited storage on enterprise plans | Same whole-file model as Dropbox; conflicts behave the same way |
 
-Most readers benefit from a hybrid: per-project git remotes for code (the bulk of the value) and Syncthing or rsync for the data that does not belong in a public or even private repo. The hybrid wins because it lets each artefact go to the mechanism that matches its semantics.
+Most readers benefit from a hybrid: per-project git remotes for code (the bulk of the value) and Syncthing or rsync for the data that does not belong in a public or even private repo. The hybrid wins because it lets each artifact go to the mechanism that matches its semantics.
 
 The single most consequential observation in this migration: 'project content' is not a homogeneous category. Splitting it into 'code' and 'data' before choosing a mechanism makes every subsequent decision easier.
 
@@ -199,11 +199,11 @@ The single most consequential observation in this migration: 'project content' i
 
 A subset of what looks like Layer 2 data is in fact a local cache of a canonical source that already lives elsewhere. For these, the right move is not to choose a sync mechanism at all; it is to let each machine rebuild its copy from the authoritative source on demand.
 
-The worked example: a Maildir-based mail setup with mutt, mbsync, and notmuch. The IMAP server holds the canonical mailbox. `mbsync` mirrors a subset of folders into a local Maildir at `~/.local/share/mail/` (or any other non-synced path; the XDG `~/.local/share/<app>/` location is a sensible default). `notmuch new` indexes the Maildir into a local Xapian database. `mutt` reads the Maildir directly. On a second laptop, the same configs deploy via Layer 1, the same `mbsync` runs from a launchd job, the local Maildir gets repopulated from IMAP, and `notmuch new` rebuilds the index. There is nothing to sync between the two laptops; the IMAP server is doing the synchronisation by being the canonical source.
+The worked example: a Maildir-based mail setup with mutt, mbsync, and notmuch. The IMAP server holds the canonical mailbox. `mbsync` mirrors a subset of folders into a local Maildir at `~/.local/share/mail/` (or any other non-synced path; the XDG `~/.local/share/<app>/` location is a sensible default). `notmuch new` indexes the Maildir into a local Xapian database. `mutt` reads the Maildir directly. On a second laptop, the same configs deploy via Layer 1, the same `mbsync` runs from a launchd job, the local Maildir gets repopulated from IMAP, and `notmuch new` rebuilds the index. There is nothing to sync between the two laptops; the IMAP server is doing the synchronization by being the canonical source.
 
 Putting the Maildir in Dropbox is wrong on four counts. It duplicates the work IMAP already does. It triples the disk footprint (IMAP + Dropbox + local). Maildir's one-message-per-file format produces hundreds of thousands of small files that strain cloud-sync engines. And the notmuch Xapian database is a B-tree-on-disk format that is not safe to share between processes on different machines via file sync.
 
-The same pattern applies to a broader class of local artefacts: Homebrew's package cache (`~/Library/Caches/Homebrew/`), language-server indexes, browser caches, ccache, AI-model caches that hash to the same content given the same prompts. None of these need to be synced between machines; each is a derivative of an authoritative source and is rebuilt cheaply on demand. Treat them as per-machine state, exclude them from any sync mechanism, and add the rebuild step to the new-machine bootstrap if it does not happen automatically.
+The same pattern applies to a broader class of local artifacts: Homebrew's package cache (`~/Library/Caches/Homebrew/`), language-server indexes, browser caches, ccache, AI-model caches that hash to the same content given the same prompts. None of these need to be synced between machines; each is a derivative of an authoritative source and is rebuilt cheaply on demand. Treat them as per-machine state, exclude them from any sync mechanism, and add the rebuild step to the new-machine bootstrap if it does not happen automatically.
 
 The new-laptop bootstrap for the Maildir case, after `install.sh` has deployed the configs:
 
@@ -224,7 +224,7 @@ The one cost of this pattern is that mail is not available offline until the fir
 
 ### Worked example: relocating an existing Maildir to ~/.local/share/mail/
 
-A common starting point for long-time mutt users is a Maildir at `~/Mail/` (the convention from before the XDG Base Directory specification existed). The relocation to `~/.local/share/mail/` is mechanical, and the cache-and-index can be moved in place rather than re-downloaded. The steps below assume mutt + mbsync + notmuch and a single Gmail account at `~/Mail/gmail/`; generalisation to other layouts is direct.
+A common starting point for long-time mutt users is a Maildir at `~/Mail/` (the convention from before the XDG Base Directory specification existed). The relocation to `~/.local/share/mail/` is mechanical, and the cache-and-index can be moved in place rather than re-downloaded. The steps below assume mutt + mbsync + notmuch and a single Gmail account at `~/Mail/gmail/`; generalization to other layouts is direct.
 
 ```bash
 # 1. Stop any running mbsync. If a launchd job runs mbsync on a
@@ -342,7 +342,7 @@ Seven gotchas to anticipate during the migration. Each lists the symptom and the
 3. **Symlinks to Dropbox break asymmetrically across machines.** Symptom: `~/.config/git -> ~/Library/CloudStorage/Dropbox/dotfiles/config/git` on machine A, but on machine B the same symlink is dangling because Dropbox is at a different path or not installed. Fix: symlinks created by `install.sh` should target `$DOTFILES` (an env var resolved at install time), not literal Dropbox paths.
 4. **Append-only history conflict copies do not announce themselves.** Symptom: a file named `history (machine's conflicted copy YYYY-MM-DD).jsonl` appears next to the canonical file, with no notification, no error, no merge prompt. Fix: a weekly grep for 'conflicted copy' across the Dropbox tree, or an explicit migration of the affected files out of cloud sync.
 5. **launchd plist substitutions overwrite themselves.** Symptom: an edit to `~/dotfiles/launchd/local.backup.research.plist` does not change the running job, because `install.sh` sed-substitutes `__USER__` to `$USER` when writing to `~/Library/LaunchAgents/`, and the active plist is the substituted copy. Fix: do not edit the active plist directly; edit the source in `~/dotfiles/launchd/`, then re-run `install.sh` plus `launchctl bootout` and `launchctl bootstrap`.
-6. **Project content includes runtime artefacts that should not
+6. **Project content includes runtime artifacts that should not
    move.** Symptom: a 200 MB `renv/library/` directory comes along
    with a project move and now lives at
    `~/prj/<project>/renv/library/`, where renv expects to manage
@@ -365,11 +365,11 @@ This is also the recommended path for a reader who completed the dotfiles work b
 
 To roll back the entire migration: the dotfiles installer's `--dry-run` should never have shipped destructively, so the rollback is just `rm -rf ~/dotfiles` plus restoring `$HOME` from a Time Machine backup. Most readers will not need this.
 
-![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganisation.](media/images/ambiance3.png){.img-fluid height=3.5in}
+![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganization.](media/images/ambiance3.png){.img-fluid height=3.5in}
 
 # What Did We Learn?
 
-## Lessons Learnt
+## Lessons Learned
 
 **Conceptual:**
 
@@ -404,13 +404,13 @@ To roll back the entire migration: the dotfiles installer's `--dry-run` should n
 2. Build an atuin (or atuin-equivalent) integration template for the dotfiles repo, so option 3 from layer 3 becomes a one-line opt-in.
 3. Add a `verify.sh` to the dotfiles repo that runs the end-to-end check (dotfiles installed, `$PRJ_ROOT` valid, backup scripts pointing at it, launchd jobs loaded) on demand and reports pass/fail.
 4. Document a canonical 'two-laptop' setup with Syncthing replacing the Dropbox role for shared project content.
-5. Generalise the worksheet's mechanism table into a maintained list (a small repo or a wiki page) that adds new tools as the ecosystem evolves (Filen, S3-backed, etc.).
+5. Generalize the worksheet's mechanism table into a maintained list (a small repo or a wiki page) that adds new tools as the ecosystem evolves (Filen, S3-backed, etc.).
 
 # Wrapping Up
 
 A portable dotfiles repository is the first half of a Dropbox-free workflow; this post is the framework for the second half. The key idea: stop treating sync as a single dimension and start treating it as three layers (configuration, project content, append-only history) with different semantics and different right answers.
 
-Most of the work is in the inventory and decision step, not in the moves themselves. Once each artefact is classified and each layer has a chosen mechanism, the actual migration is a sequence of small file moves and a few text edits. The pieces that take time are testing the new-machine bootstrap, deciding what to do about history files, and resisting the temptation to migrate everything in one weekend.
+Most of the work is in the inventory and decision step, not in the moves themselves. Once each artifact is classified and each layer has a chosen mechanism, the actual migration is a sequence of small file moves and a few text edits. The pieces that take time are testing the new-machine bootstrap, deciding what to do about history files, and resisting the temptation to migrate everything in one weekend.
 
 ## Expected outcomes
 
