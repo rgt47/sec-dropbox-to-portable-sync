@@ -6,7 +6,7 @@ categories: [workflow, sync, migration, dropbox]
 description: "A portable dotfiles repository is only the first step. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
 image: "media/images/hero.png"
 document-type: "blog"
-draft: true
+draft: false
 execute:
   echo: true
   warning: false
