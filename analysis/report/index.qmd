@@ -2,6 +2,7 @@
 title: "Migrating Off Dropbox: Beyond Dotfiles"
 author: "Ronald G. Thomas"
 date: "2026-05-07"
+date-modified: "2026-09-11"
 categories: [workflow, sync, migration, dropbox]
 description: "A portable dotfiles repository is only the first step. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
 image: "media/images/hero.png"
@@ -94,12 +95,13 @@ This post frames the problem as three independent layers (dotfiles, project cont
 ::: {.callout-note}
 ## Status of this migration
 
-This post documents an ongoing migration on the author's own setup.
-At time of writing, Layer 1 (dotfiles) is complete: the repository
-exists at `~/dotfiles/`, the installer is written and dry-run-tested,
-and the architecture below has been exercised end-to-end on this
-laptop. Layer 2 (project content) and Layer 3 (append-only history)
-are in progress. The framework is presented as it stands today; the
+This post documents an ongoing migration on the author's own setup,
+and a later post in this cluster corrects the status reported here.
+At the time of writing, Layer 1 (dotfiles) was described as complete.
+A measurement in September 2026 found otherwise: on the primary Mac,
+`~/dotfiles` is a symlink into the Dropbox tree with no `.git` and no
+`install.sh`. Layer 1 was designed, not finished. Layers 2 and 3
+remain in progress. The framework is presented as it stands today; the
 'After completing this migration' results section near the end is
 labelled as expected outcomes rather than claimed ones, and will be
 updated with measured numbers once the migration reaches a fresh
@@ -189,11 +191,27 @@ The candidate sync mechanisms, with the dimensions that matter:
 | **Syncthing (peer-to-peer, no cloud)** | No middleman, no quotas, sync-to-LAN is fast, files are local-first | Two machines must be online together to sync; conflict semantics are simpler than Dropbox's but still file-level |
 | **rsync over SSH to a NAS or VPS** | Bandwidth-efficient, deterministic, scriptable | One-way push (or hand-coded bidirectional); requires the destination to exist; no version history without extra work |
 | **iCloud Drive (native macOS)** | Tight macOS integration, included with Apple ID | macOS-only; opaque sync timing; cannot exclude subdirectories cleanly |
-| **Google Drive (rclone or native)** | Effectively unlimited storage on enterprise plans | Same whole-file model as Dropbox; conflicts behave the same way |
+| **Google Drive (rclone or native)** | Large institutional quotas, and often already paid for | Same whole-file model as Dropbox; conflicts behave the same way. Note that 'unlimited' institutional plans are largely gone: quotas are now enforced and additional capacity is purchased in blocks |
+| **An object store (S3-compatible, self-hosted or rented)** | Nothing is edited in place, so there are no conflicts to resolve; a key plus a content hash is a durable citation; access is centrally revocable; enforced write-once is available | Not a sync mechanism at all, so it needs an explicit fetch step in the build; poor at partial reads of row-oriented formats; someone must administer the bucket |
+
+The last row is the odd one out, and deliberately so. The other five
+answer the question 'how do I keep the same mutable files agreeing
+across machines'. An object store declines the question: data is
+written once under a versioned key and fetched on demand, so the
+laptops hold caches rather than replicas and there is nothing to
+reconcile. It is the mechanism this series eventually settles on for
+data, and [the next post](../sec-object-store-research-data/) makes
+that case properly and tests an implementation.
 
 Most readers benefit from a hybrid: per-project git remotes for code (the bulk of the value) and Syncthing or rsync for the data that does not belong in a public or even private repo. The hybrid wins because it lets each artifact go to the mechanism that matches its semantics.
 
 The single most consequential observation in this migration: 'project content' is not a homogeneous category. Splitting it into 'code' and 'data' before choosing a mechanism makes every subsequent decision easier.
+
+::: {.callout-note}
+## What later experience changed
+
+The hybrid above was the recommendation when this post was written, and the git-for-code half of it has held up. The data half has not. Syncthing and rsync both presume a mutable copy on every machine, which is the assumption underneath most of the failures catalogued in this post, and choosing between them is choosing which flavor of the same problem to accept. The sixth row is the answer I would give now. See [Object Storage for Research Data](../sec-object-store-research-data/) for the argument and a tested setup, and [Five Machines, One Object Store](../sec-five-machine-storage/) for what it looks like applied to a real set of hardware. The observation that code and data must be separated before choosing anything stands unchanged, and is what makes the substitution possible.
+:::
 
 ### Reconstructable local caches: the Maildir case
 
@@ -467,7 +485,7 @@ I would enjoy hearing from you if:
 
 ---
 
-*Rendered on 2026-05-08 at 06:10 PDT.*<br>
+*Rendered on 2026-09-11 at 19:04 PDT.*<br>
 *Source: ~/prj/rgtlab/posts/sec-dropbox-to-portable-sync/index.qmd*
 
 <!-- ============================================================================
@@ -524,17 +542,22 @@ top of this file. If anything below is unchecked, the post is not ready.
     [ ] Internal links resolve
 ============================================================================ -->
 
-## Related posts
+## Related posts in this cluster
 
-This post stands on its own rather than as part of a numbered
-series, since not every reader syncs their environment through
-Dropbox. It picks up after the dotfiles work described in
-[Multi-Laptop macOS Bootstrap](../wf-multi-laptop-dotfiles-bootstrap/)
-and pairs with the *Security, Backup, and Sync* series for readers
-who do need it:
+This post is part of the *Cloud Sync Migration* series. Recommended
+reading order:
 
-- Post 31: [Research Backup Architecture](../sec-three-tier-backup-architecture/)
-- Post 33: [Setting Up pass: a Unix Password Manager](../sec-pass-password-manager/)
-- Post 34: [Secrets Management for the Workflow Construct](../sec-aws-and-pass-secrets/)
-5. Post 35: [Security Foundations for a Multi-Laptop Research Cluster](../sec-multi-laptop-threat-model/)
+1. **Migrating Off Dropbox: Beyond Dotfiles** (this post)
+2. [Object Storage for Research Data: The Layer Git Cannot Hold](../sec-object-store-research-data/)
+3. [Five Machines, One Object Store, No Sync Daemon](../sec-five-machine-storage/)
+
+It picks up after the dotfiles work described in
+[Multi-Laptop macOS Bootstrap](../wf-multi-laptop-dotfiles-bootstrap/),
+and it pairs with the *Security, Backup, and Sync* series for
+readers who need the credential and backup layers:
+
+- [Research Backup Architecture](../sec-three-tier-backup-architecture/)
+- [Setting Up pass: a Unix Password Manager](../sec-pass-password-manager/)
+- [Secrets Management for the Workflow Construct](../sec-aws-and-pass-secrets/)
+- [Security Foundations for a Multi-Laptop Research Cluster](../sec-multi-laptop-threat-model/)
 
