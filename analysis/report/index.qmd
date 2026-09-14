@@ -33,8 +33,8 @@ YAML FRONT MATTER (lines 1-20)
   [x] draft: false    — flip when imagery in place and render verified
 
 NARRATIVE INPUTS
-  [x] Hook sentence   — 'I did not really appreciate how much of my
-        workflow depended on Dropbox until I tried to leave it.'
+  [x] Hook sentence   — 'More of my daily workflow depended on
+        Dropbox than I had counted on.'
   [x] Pain point      — half-portable dotfiles + Dropbox-bound everything
                         else; new laptop without Dropbox is broken
   [x] Motivations     — five bullets
@@ -86,7 +86,7 @@ HERO IMAGE
 
 # Introduction
 
-I did not really appreciate how much of my daily workflow depended on Dropbox until I tried to leave it. Migrating dotfiles is the obvious half: pull the configuration files out of a cloud-mounted directory, put them under git, write an installer that creates symlinks. Once that work is committed, every dotfile in `$HOME` becomes version-controlled and reproducible on a new laptop with two commands.
+More of my daily workflow depended on Dropbox than I had counted on, which became clear only in trying to leave it. Migrating dotfiles is the obvious half: pull the configuration files out of a cloud-mounted directory, put them under git, write an installer that creates symlinks. Once that work is committed, every dotfile in `$HOME` becomes version-controlled and reproducible on a new laptop with two commands.
 
 The non-obvious half is everything else. The dotfiles deploy cleanly on a fresh machine, then the new shell tries to `cd ~/prj/some-project` and fails because the project tree still lives at `~/Library/CloudStorage/Dropbox/prj/`. Backup scripts hardcode the same Dropbox path. AI-tool history files live under a Dropbox-synced symlink and accumulate conflict copies on every overlapping write between machines. The configuration is portable; the workflow is not.
 
