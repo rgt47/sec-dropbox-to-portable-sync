@@ -2,386 +2,474 @@
 title: "Migrating Off Dropbox: Beyond Dotfiles"
 author: "Ronald G. Thomas"
 date: "2026-05-07"
-date-modified: "2026-09-11"
-categories: [workflow, sync, migration, dropbox]
-description: "A portable dotfiles repository is only the first step. This post extends the same goal to the rest of a single-user research workflow: project content, backup-pipeline source paths, and the append-only history files that Dropbox handles particularly badly. Frames the problem as three layers and walks through trade-offs for each."
+categories: [security, workflow, sync, migration, dropbox]
+description: "Leaving a sync daemon is a classification problem before it is a copying problem. This post covers where each part of a research workflow went after Dropbox (configuration to a git repository, projects to local folders with backups, history files to per-machine state), the credential exposure that settings folders linked into the synced tree had caused, how to delete a shared copy without a forgotten device restoring it, and how the machines stay in step afterwards."
 image: "media/images/hero.png"
 document-type: "blog"
 draft: false
+cluster: security
+cluster-order: 4
 execute:
   echo: true
   warning: false
   message: false
-cluster: cloud-sync-migration
-cluster-order: 1
 ---
 
 <!-- ============================================================================
-AUTHOR PROVIDES — concrete inputs the blogger must supply
+AUTHOR NOTES
 
-Every item below maps to a placeholder in the body. Fill in this checklist
-FIRST, then paste your answers into the matching `[bracketed]` slots. Do not
-publish until every box is ticked.
+Part 4 of the security series. Owns: leaving the sync daemon (what moved
+where), the exposure through settings folders linked into the synced
+tree, deleting a shared copy safely, auditing $HOME links before
+uninstalling, and keeping machines in step afterwards. Backup mechanics
+belong to sec-three-tier-backup-architecture; credential handling to
+sec-pass-password-manager and sec-aws-and-pass-secrets.
 
-YAML FRONT MATTER (lines 1-20)
-  [x] title           — 'Migrating Off Dropbox: Beyond Dotfiles'
-  [x] subtitle        — decision framework for the rest of the workflow
-  [x] date            — 2026-05-07
-  [x] categories      — workflow, sync, migration, dropbox
-  [x] description     — set
-  [x] image           — media/images/hero.png (Imagen 3, 2026-05-07)
-  [x] draft: false    — flip when imagery in place and render verified
-
-NARRATIVE INPUTS
-  [x] Hook sentence   — 'More of my daily workflow depended on
-        Dropbox than I had counted on.'
-  [x] Pain point      — half-portable dotfiles + Dropbox-bound everything
-                        else; new laptop without Dropbox is broken
-  [x] Motivations     — five bullets
-  [x] Objectives      — four verifiable end states
-  [x] What is [the problem]? — three-layer model
-  [x] Daily-workflow paragraph — how the post-migration setup feels
-  [x] Things to Watch Out For — six gotchas
-  [x] Lessons Learnt  — conceptual / technical / gotchas
-  [x] Limitations     — six bullets
-  [x] Opportunities for Improvement — five next steps
-  [x] Wrapping Up     — conclusion + main takeaways
-  [x] See Also        — key external links
-
-CONFIGURATION DELIVERABLES (real, working artifacts, not snippets)
-  [x] Prerequisites list — listed in body
-  [ ] Installation block — N/A (this post is a framework, not an install)
-  [x] Complete deliverable — docs/migration-decision-worksheet.qmd
-  [ ] Verification commands — N/A (post-specific commands inline)
-  [ ] Optional keybinding/command reference table — not applicable
-  [x] Uninstall / rollback steps — covered as 'staying with Dropbox' path
-  [ ] Optional appendices — see-also section serves this role
-
-VERSION MATRIX (Reproducibility section)
-  [x] OS + version tested        — macOS 15.4 (Sequoia)
-  [x] Tool versions              — git 2.45+, rsync 3.2+, Syncthing 1.27+
-  [x] Date of last verification  — 2026-05-07
-
-IMAGES (4 total: hero + 3 ambiance, all in media/images/)
-  [ ] Hero image (80% width)        — placeholders in place; prompts ready
-  [ ] Ambiance image 1 (100% width)
-  [ ] Ambiance image 2 (100% width)
-  [ ] Ambiance image 3 (100% width)
-  [ ] media/images/README.md        — update with new prompts and dates
-
-CONTACT & METADATA
-  [x] Author name in YAML matches site author
-  [x] Social links in 'Let's Connect' updated (or removed)
-  [x] Giscus comments enabled (inherited from _quarto.yml)
-
-============================================================================ -->
-
-<!-- ============================================================================
-HERO IMAGE
+Images: hero.png and ambiance1-3.png (Imagen 3, 2026-05-07); prompts
+and attribution in media/images/README.md.
 ============================================================================ -->
 
 ![A wooden tray on a plain workbench, with one large compartment on the left holding a single round glass weight and three narrower compartments on the right holding three different small objects, suggesting a single category being separated into three purpose-fit ones.](media/images/hero.png){.img-fluid width=80% fig-align="center"}
 
-*A portable dotfiles repository is only the first half of leaving Dropbox. The other half is the rest of the workflow.*
+*One sync mechanism for everything becomes several mechanisms, each matched to what it carries.*
 
 # Introduction
 
-More of my daily workflow depended on Dropbox than I had counted on, which became clear only in trying to leave it. Migrating dotfiles is the obvious half: pull the configuration files out of a cloud-mounted directory, put them under git, write an installer that creates symlinks. Once that work is committed, every dotfile in `$HOME` becomes version-controlled and reproducible on a new laptop with two commands.
-
-The non-obvious half is everything else. The dotfiles deploy cleanly on a fresh machine, then the new shell tries to `cd ~/prj/some-project` and fails because the project tree still lives at `~/Library/CloudStorage/Dropbox/prj/`. Backup scripts hardcode the same Dropbox path. AI-tool history files live under a Dropbox-synced symlink and accumulate conflict copies on every overlapping write between machines. The configuration is portable; the workflow is not.
-
-This post frames the problem as three independent layers (dotfiles, project content, append-only history) and surveys the sync mechanisms each layer can use. It then walks through a migration sequence that does not break a running pipeline mid-move. The companion deliverable is a decision worksheet that takes a reader from current state to a concrete migration plan. The choice of whether to leave Dropbox at all is left to the reader; this post is about doing it deliberately rather than partially.
+For years, one Dropbox folder held nearly everything in this research
+workflow: shell and editor configuration, about 19 GB of project
+repositories, personal documents, shared LaTeX and R utilities, and,
+through a handful of symbolic links, several application settings
+folders. Leaving it took longer than copying files, because the
+difficult part was deciding what each category of file needed, and
+because finishing the job surfaced problems that a sync daemon had kept
+out of sight. This post records where everything went, what the move
+exposed, and the procedures that made the final deletion safe.
 
 ::: {.callout-note}
-## Status of this migration
-
-This post documents an ongoing migration on the author's own setup,
-and a later post in this cluster corrects the status reported here.
-At the time of writing, Layer 1 (dotfiles) was described as complete.
-A measurement in September 2026 found otherwise: on the primary Mac,
-`~/dotfiles` is a symlink into the Dropbox tree with no `.git` and no
-`install.sh`. Layer 1 was designed, not finished. Layers 2 and 3
-remain in progress. The framework is presented as it stands today; the
-'After completing this migration' results section near the end is
-labelled as expected outcomes rather than claimed ones, and will be
-updated with measured numbers once the migration reaches a fresh
-laptop. The companion plan tracking this work is available in the
-dotfiles repository as `MULTI_LAPTOP_PLAN.md`.
+Part 4 of the security series; start with [Security Foundations for a Multi-Machine Research Fleet](../sec-multi-laptop-threat-model/) for the overview.
 :::
+
+The fleet involved is the one described in the series hub: three Macs
+(julia, athena, joe), a Linux home server (mercury) and a Linux laptop
+(zeus). Dropbox ran on the three Macs and, as it turned out, on zeus as
+well. It is now uninstalled from every machine.
 
 ## Motivations
 
-- A new laptop bootstrap should be a one-command operation. Today, after running the dotfiles installer, half the workflow still requires installing Dropbox, signing in, and waiting for several gigabytes to materialize before anything functional happens.
-- Dropbox sync of append-only files (shell history, AI-tool history, editor undo files) routinely produces conflict copies on multi-machine setups. The 12 conflict copies of `history.jsonl` discovered in this account on 2026-05-02 are one symptom of an architectural mismatch.
-- Project content directories under Dropbox commingle with cloud-only artifacts that should not be synced (model output, large derived data, machine-specific caches). Excluding them via `.dropboxignore` is fragile and error-prone.
-- The set of services that compete for `$HOME` (Dropbox, iCloud Drive, Google Drive, OneDrive) keeps growing, and choosing one default for everything is increasingly suboptimal as each service specializes.
-- The work to reach 'workflow independence' is largely the same
-  work as 'workflow modernization': separating concerns by layer,
-  choosing sync mechanisms that match each layer's semantics, and
-  documenting each move so it can be audited later.
+- **A new machine should not depend on a sync client.** Before the
+  move, a freshly installed Mac with the dotfiles deployed still could
+  not open a project until Dropbox had signed in and downloaded several
+  gigabytes.
+- **Append-only files and whole-file sync do not mix.** Shell history
+  and an AI assistant's prompt log were written by several machines
+  through a synced link; every overlapping write produced a silent
+  conflict copy.
+- **A synced folder is an exposure surface.** Anything a tool writes
+  into a linked folder leaves the machine, whether or not anyone
+  intended it to.
+- **Deletion in a shared account is not local.** Every device linked to
+  the account can propagate, or reverse, a deletion.
+- **Derived artifacts should not travel.** Package libraries, caches and
+  model output inflate a synced tree and make exclusion rules fragile.
 
 ## Objectives
 
-1. Inventory the workflow against three layers (dotfiles, project content, append-only history) and classify every sync-relevant artifact into exactly one layer.
-2. Produce a decision worksheet that, for each layer, names the candidate sync mechanisms and the trade-offs that distinguish them.
-3. Sequence the migration so that the backup pipeline never points at a stale source path and the launchd jobs stay valid throughout the move.
-4. Establish a fresh-machine bootstrap that does not require Dropbox and verifies the entire workflow end to end.
+By the end of this post the reader should be able to:
 
-This post documents the author's own migration. If errors are
-spotted or better approaches are known, the comment thread below
-is the right place to note them.
+1. Classify the contents of a synced folder by how each category should
+   be distributed: by git, by backup only, or not at all.
+2. Recognize settings folders linked into a synced tree as a credential
+   exposure, and respond with rotation rather than reassurance.
+3. Delete a shared copy in an order that no linked device can undo.
+4. Audit `$HOME` for links into the synced tree before uninstalling the
+   client.
+5. Keep several machines in step afterwards without any sync daemon.
 
 ![A wooden desk seen from above with three small index cards arranged in a horizontal row, each card showing a hand-drawn symbol, suggesting classification before action.](media/images/ambiance1.png){.img-fluid height=3.5in}
 
 # What is the Problem?
 
-The problem is that 'sync everything via one cloud provider' was a reasonable default in 2014, when Dropbox was the only practical option for arbitrary file sync, but it now bundles three semantically distinct concerns into a single mechanism. The three concerns:
+A general-purpose sync daemon bundles concerns that want different
+treatment:
 
-- **Configuration distribution** wants version history, atomic deploys, and the ability to roll back. Git solves this; cloud sync only approximates it.
-- **Project content sync** wants block-level diffs for large files, conflict semantics that match the file format, and the option to exclude derived artifacts. Different sync mechanisms handle these very differently.
-- **Append-only history** wants either single-machine writes or a sync mechanism that understands append semantics. Cloud sync writes the whole file on every change and produces a conflict copy on every overlap.
+- **Configuration** wants version history, review before change and
+  the ability to roll back. Git provides all three; whole-file sync
+  approximates none of them.
+- **Project content** wants per-project history for code and durable,
+  restorable copies for data. Neither requires that every machine hold
+  a live, mutable replica of everything.
+- **Append-only history** wants either one writer or an append-aware
+  merge. Whole-file sync gives neither and produces a conflict copy on
+  every overlap.
+- **Settings folders** belong to none of these categories by design,
+  yet a symbolic link can quietly place them in the synced tree. They
+  accumulate credentials that tools create long after the link was
+  made.
 
-A useful analogy: it is the same reason a research compendium separates `data/`, `R/`, and `analysis/`. Each directory has different rules about what changes, how it changes, and who is allowed to change it. Lumping them all into one sync mechanism enforces no useful constraint and produces friction at the boundary.
-
-A concrete example from this migration: the file `~/.claude/history.jsonl` is an append-only log of prompts entered into the Claude Code CLI. Five machines (athena, Joe, julia.local, MacBook-Air.local, and the author's primary laptop) write to it through a Dropbox-synced symlink. Most days, only one machine is active and the file syncs cleanly. The day two machines write within the same minute, Dropbox cannot merge the two append streams and creates a conflict copy. Across April 2026 alone, this produced four new conflict copies on this account, each holding several hundred KB of unique prompts; the running total since January is eleven. The file format is not the problem; the choice to sync an append log via a whole-file cloud provider is.
+The first three items are a question of fit. The fourth is a question of
+security, and it is the one that changed the course of this migration.
+A useful test for any file is to ask which of the four it is before
+asking where it should go.
 
 # Prerequisites
 
-This post assumes:
+- **Machines:** macOS 13 or later, or a recent Linux distribution.
+  Paths in this post follow macOS conventions.
+- **Tools:** git, the GitHub CLI (`gh`), and a password manager for any
+  credential that has to be replaced (this series uses `pass`; see
+  [Setting Up pass](../sec-pass-password-manager/)).
+- **Backups in place first:** at least one independent backup of every
+  machine before any shared copy is deleted. The backup design is in
+  [Research Backup Architecture](../sec-three-tier-backup-architecture/).
+- **Access to the sync account's web interface,** in particular its
+  list of linked devices.
+- **Time:** an afternoon to inventory and classify; a day or two to
+  move, verify and uninstall across several machines.
 
-- **Operating system:** macOS 13+ or a recent Linux distribution. The sync-mechanism table is applicable to both, but specific path conventions reference macOS.
-- **Already in place:** a working dotfiles repository, migrated to git and out of any cloud-mounted path. The architecture below builds on that foundation; without it, half the moves cannot be made cleanly.
-- **Background knowledge:** comfort with git remotes, basic launchd plist structure, rclone or rsync at the level of a single sync command. The post does not require expertise in any of these.
-- **Hardware:** a single primary laptop is sufficient. A second machine (or VM) is useful for the migration's verification step but is not required.
-- **Time required:** about a day's careful work to inventory and decide; about a half-day to execute the moves once the decisions are made.
+# Where Everything Went
 
-On a single-machine setup where conflict copies have never
-appeared, the migration's payoff is smaller and may not warrant
-the undertaking. The framework still applies, but Dropbox is
-unlikely to be causing friction in that scenario.
+## Configuration: one dotfiles repository
 
-# The Three Layers
+Shell, editor, git and tool configuration lives in a single git
+repository at `~/dotfiles`, on a path no sync client touches. An
+`install.sh` creates the links into `$HOME` and installs the user
+launchd jobs; `~/bin` on each machine is a folder of links into
+`~/dotfiles/bin`. The repository also carries a `Brewfile`, so the
+installed application set is declared rather than remembered, and a
+list of TeX packages for a per-user TinyTeX installation.
 
-Treat the workflow as three layers. Each layer has its own sync semantics, its own candidate mechanisms, and its own failure modes.
+Two rules keep the repository safe. Secrets never enter it, and any
+tool that writes credentials into its own configuration folder has that
+file excluded explicitly. The GitHub CLI is the example: it stores its
+login token in `config/gh/hosts.yml`, which is listed in the
+repository's `.gitignore` (see 'The Exposure' below for why that line
+exists).
 
-## Layer 1: Dotfiles distribution
+## Project content: local folders, git for code, backups for the rest
 
-Assumed already solved, per the prerequisites above. The summary, for reference: configuration files live in a git repository at `~/dotfiles/` (outside any cloud-mounted path), an `install.sh` creates symlinks into `$HOME` per machine, secrets stay out of the repository entirely. New-machine bootstrap is `git clone … ~/dotfiles && cd ~/dotfiles && ./install.sh`.
-
-This layer is the easiest to migrate because the files are small, change infrequently, and are nearly always edited from a single machine. Git handles the multi-machine merge cleanly when overlap does occur.
-
-What a dotfiles migration on its own does not address: project content (the next layer), backup-pipeline source paths (also next layer), and append-only history (the third layer). Those failures show up only after the dotfiles layer is migrated, which is why this post exists.
-
-## Layer 2: Project content sync
-
-Project content is the directory tree that holds research repositories, data, drafts, and archives. On a Dropbox-bound workflow this is `~/Dropbox/prj/` and similar siblings (`docs/`, `sbx/`, `work/`, `shr/`).
-
-Project content has different sync characteristics from dotfiles:
-
-- It is much larger (tens of GB is typical).
-- It contains both small text (R, Quarto) and large binary (data, figures, PDFs).
-- It changes frequently, often on a single machine within a session.
-- It includes derived artifacts that should not be synced at all (renv libraries, model output, caches).
-
-The candidate sync mechanisms, with the dimensions that matter:
-
-| Mechanism | Strength | Weakness |
-|---|---|---|
-| **Per-project git remotes (GitHub, GitLab, Codeberg)** | Diff-aware history, atomic deploys, free for small repos | Bad with large binary files (Git LFS quotas), each project must be a repo |
-| **Syncthing (peer-to-peer, no cloud)** | No middleman, no quotas, sync-to-LAN is fast, files are local-first | Two machines must be online together to sync; conflict semantics are simpler than Dropbox's but still file-level |
-| **rsync over SSH to a NAS or VPS** | Bandwidth-efficient, deterministic, scriptable | One-way push (or hand-coded bidirectional); requires the destination to exist; no version history without extra work |
-| **iCloud Drive (native macOS)** | Tight macOS integration, included with Apple ID | macOS-only; opaque sync timing; cannot exclude subdirectories cleanly |
-| **Google Drive (rclone or native)** | Large institutional quotas, and often already paid for | Same whole-file model as Dropbox; conflicts behave the same way. Note that 'unlimited' institutional plans are largely gone: quotas are now enforced and additional capacity is purchased in blocks |
-| **An object store (S3-compatible, self-hosted or rented)** | Nothing is edited in place, so there are no conflicts to resolve; a key plus a content hash is a durable citation; access is centrally revocable; enforced write-once is available | Not a sync mechanism at all, so it needs an explicit fetch step in the build; poor at partial reads of row-oriented formats; someone must administer the bucket |
-
-The last row is the odd one out, and deliberately so. The other five
-answer the question 'how do I keep the same mutable files agreeing
-across machines'. An object store declines the question: data is
-written once under a versioned key and fetched on demand, so the
-laptops hold caches rather than replicas and there is nothing to
-reconcile. It is the mechanism this series eventually settles on for
-data, and [the next post](../sec-object-store-research-data/) makes
-that case properly and tests an implementation.
-
-Most readers benefit from a hybrid: per-project git remotes for code (the bulk of the value) and Syncthing or rsync for the data that does not belong in a public or even private repo. The hybrid wins because it lets each artifact go to the mechanism that matches its semantics.
-
-The single most consequential observation in this migration: 'project content' is not a homogeneous category. Splitting it into 'code' and 'data' before choosing a mechanism makes every subsequent decision easier.
-
-::: {.callout-note}
-## What later experience changed
-
-The hybrid above was the recommendation when this post was written, and the git-for-code half of it has held up. The data half has not. Syncthing and rsync both presume a mutable copy on every machine, which is the assumption underneath most of the failures catalogued in this post, and choosing between them is choosing which flavor of the same problem to accept. The sixth row is the answer I would give now. See [Object Storage for Research Data](../sec-object-store-research-data/) for the argument and a tested setup, and [Five Machines, One Object Store](../sec-five-machine-storage/) for what it looks like applied to a real set of hardware. The observation that code and data must be separated before choosing anything stands unchanged, and is what makes the substitution possible.
-:::
-
-### Reconstructable local caches: the Maildir case
-
-A subset of what looks like Layer 2 data is in fact a local cache of a canonical source that already lives elsewhere. For these, the right move is not to choose a sync mechanism at all; it is to let each machine rebuild its copy from the authoritative source on demand.
-
-The worked example: a Maildir-based mail setup with mutt, mbsync, and notmuch. The IMAP server holds the canonical mailbox. `mbsync` mirrors a subset of folders into a local Maildir at `~/.local/share/mail/` (or any other non-synced path; the XDG `~/.local/share/<app>/` location is a sensible default). `notmuch new` indexes the Maildir into a local Xapian database. `mutt` reads the Maildir directly. On a second laptop, the same configs deploy via Layer 1, the same `mbsync` runs from a launchd job, the local Maildir gets repopulated from IMAP, and `notmuch new` rebuilds the index. There is nothing to sync between the two laptops; the IMAP server is doing the synchronization by being the canonical source.
-
-Putting the Maildir in Dropbox is wrong on four counts. It duplicates the work IMAP already does. It triples the disk footprint (IMAP + Dropbox + local). Maildir's one-message-per-file format produces hundreds of thousands of small files that strain cloud-sync engines. And the notmuch Xapian database is a B-tree-on-disk format that is not safe to share between processes on different machines via file sync.
-
-The same pattern applies to a broader class of local artifacts: Homebrew's package cache (`~/Library/Caches/Homebrew/`), language-server indexes, browser caches, ccache, AI-model caches that hash to the same content given the same prompts. None of these need to be synced between machines; each is a derivative of an authoritative source and is rebuilt cheaply on demand. Treat them as per-machine state, exclude them from any sync mechanism, and add the rebuild step to the new-machine bootstrap if it does not happen automatically.
-
-The new-laptop bootstrap for the Maildir case, after `install.sh` has deployed the configs:
+`~/prj` is now an ordinary local folder on each Mac. Scripts refer to it
+through one environment variable, set in `~/.zshenv`, which made the move
+a two-step change: first every script was rewritten to use the variable
+while it still resolved to the Dropbox path, then the variable was
+pointed at the local folder.
 
 ```bash
-# Restore IMAP/SMTP credentials (manual; from pass / keychain / 1Password).
-# Then:
-mbsync -a                        # populate ~/.local/share/mail/
-notmuch new                      # build the Xapian index
-launchctl bootstrap "gui/$UID" \
-  ~/Library/LaunchAgents/local.mbsync.plist
-launchctl bootstrap "gui/$UID" \
-  ~/Library/LaunchAgents/local.notmuch.new.plist
+# ~/.zshenv: the first existing candidate wins, so the same file
+# worked before, during and after the move.
+if [[ -z "${PRJ_ROOT:-}" ]]; then
+  for _candidate in \
+    "$HOME/prj" \
+    "$HOME/Dropbox/prj" \
+    "$HOME/Library/CloudStorage/Dropbox/prj"
+  do
+    if [[ -d "$_candidate" ]]; then
+      export PRJ_ROOT="$_candidate"
+      break
+    fi
+  done
+  unset _candidate
+fi
 ```
 
-Time depends on mailbox size; a 3 GB mailbox over residential broadband is roughly 30-60 minutes. The two scheduled jobs keep the Maildir current thereafter.
+Code moves between machines through each project's own git remote.
+Nothing synchronizes the rest of `~/prj` automatically. It is protected
+instead: nightly Borg backups to the home server cover every machine,
+and julia and athena also mirror `~/prj` to three cloud providers, each
+machine into its own destination folder. That design, and the failures
+it had to survive, belong to [Research Backup
+Architecture](../sec-three-tier-backup-architecture/). Data that is too
+large or too shared for this arrangement is the subject of [Object
+Storage for Research Data](../sec-object-store-research-data/).
 
-The one cost of this pattern is that mail is not available offline until the first `mbsync -a` completes. For mutt users this is rarely a meaningful constraint; for users who need immediate offline access on a fresh laptop, an `rsync` of a recent Maildir snapshot from the previous laptop into `~/.local/share/mail/` skips the IMAP fetch step.
+## Documents, shared utilities and scratch space
 
-### Worked example: relocating an existing Maildir to ~/.local/share/mail/
+`~/docs` (personal, research and administrative documents, under half a
+gigabyte) became a plain local folder on each Mac, covered by the Borg
+backups. The copies are independent; documents are edited on one
+machine at a time. A folder of shared LaTeX and R utilities was first
+moved out the same way and later retired altogether once nothing still
+depended on it. A sandbox folder, whose links had already gone stale on
+one machine, was deleted rather than migrated.
 
-A common starting point for long-time mutt users is a Maildir at `~/Mail/` (the convention from before the XDG Base Directory specification existed). The relocation to `~/.local/share/mail/` is mechanical, and the cache-and-index can be moved in place rather than re-downloaded. The steps below assume mutt + mbsync + notmuch and a single Gmail account at `~/Mail/gmail/`; generalization to other layouts is direct.
+## Local caches of an authoritative source
 
-```bash
-# 1. Stop any running mbsync. If a launchd job runs mbsync on a
-#    schedule, bootout it temporarily.
-pkill -f mbsync || true
-launchctl bootout "gui/$UID/local.mbsync" 2>/dev/null || true
+Some content that looks like data is a cache of something held
+elsewhere. Mail is the clearest case: the IMAP server holds the mailbox,
+`mbsync` mirrors it into a local Maildir under `~/.local/share/mail/`,
+and `notmuch` indexes it. A second machine rebuilds both from the server
+rather than receiving them by sync. The same reasoning covers package
+caches, language-server indexes and similar derived state: each machine
+rebuilds its own, and no sync or backup tier needs to carry it.
 
-# 2. Cheap insurance: dump the notmuch tag database. Tags are user
-#    state; the message index can be rebuilt, the tags cannot.
-notmuch dump --output="$HOME/notmuch-dump-$(date +%Y%m%d).txt"
+## Append-only history: per-machine state
 
-# 3. Move the Maildir AND .notmuch together. They must move
-#    atomically to keep the Xapian database's relative paths valid.
-mkdir -p ~/.local/share/mail
-mv ~/Mail/gmail   ~/.local/share/mail/gmail
-mv ~/Mail/.notmuch ~/.local/share/mail/.notmuch
+Shell history, editor state and AI-assistant prompt logs are now
+ordinary local files on each machine and are not synchronized at all.
+The alternative, an append-aware tool such as atuin for shell history,
+remains available for anyone who wants shared history; the simpler rule
+was sufficient here. The last conflict copies of the prompt log, dated a
+week before the move, were found on all three Macs and removed. They
+cannot recur, because nothing in that folder is synced.
 
-# 4. Update the dotfiles repo (Layer 1, single source of truth)
-#    BEFORE editing any live config under $HOME. Edit:
-#       ~/dotfiles/editors/notmuch-config         (path = $HOME/.local/share/mail)
-#       ~/dotfiles/config/mutt/muttrc             (folder, spoolfile, postponed, record)
-#       ~/dotfiles/mbsyncrc                        (Path, Inbox under each MaildirStore)
-#    Commit and push. (The dotfiles repo is OUTSIDE cloud-mounted
-#    paths per Layer 1, so in-place editors are safe to use here.)
+# The Exposure: Settings Folders in a Synced Tree
 
-# 5. Reflect the dotfiles changes into $HOME (idempotent).
-cd ~/dotfiles && ./install.sh
+On julia and athena, a settings folder had been a symbolic link into the
+Dropbox tree for months. Nothing about it was visible in daily use.
+Every file a tool later wrote into that folder was therefore uploaded
+to Dropbox's servers, including:
 
-# 6. Verify.
-mbsync -a                  # Resumes incrementally; should NOT re-download.
-notmuch search '*' | head  # Confirms the index resolves message paths.
-mutt -e 'exit'             # Opens and exits cleanly with the new paths.
+- the GPG private key that protects the password store;
+- both machines' Borg backup passphrases;
+- the OAuth tokens `rclone` uses for Google Drive and OneDrive;
+- an AI service API key;
+- stale copies of the password store and of older settings.
 
-# 7. Re-enable the scheduled mbsync once verification passes.
-launchctl bootstrap "gui/$UID" \
-    ~/Library/LaunchAgents/local.mbsync.plist
-```
+There was no way to establish whether anyone else had read that data, so
+every exposed credential was treated as compromised and replaced. The
+rotation covered a new GPG key with the store re-encrypted to it,
+new Borg passphrases, new SSH keys for the code-hosting services,
+revoked and reissued OAuth authorizations, and new API keys and app
+passwords. The procedures are in [Setting Up
+pass](../sec-pass-password-manager/) and [Secrets Management for the
+Workflow Construct](../sec-aws-and-pass-secrets/). Testing the old
+credentials mattered as much as issuing new ones: some were already
+dead, and some were still live until they were revoked.
 
-Two points worth flagging:
+A second copy surfaced on joe. When macOS moved Dropbox to its newer
+file-provider integration, it had renamed the old local Dropbox folder
+and left it in place, and that frozen copy included an old folder of SSH
+keys and tokens. Every item in it was checked against the service it
+belonged to (dead, expired, removed, or for a server that no longer
+exists) before the frozen folder was deleted.
 
-- The notmuch Xapian database stores message paths relative to `database.path`. Moving the Maildir and `.notmuch` together preserves those relative paths, so `notmuch new` is not required. If the two directories are moved separately for any reason, the
-index becomes invalid and `notmuch new` is needed to rebuild it.
-- Step 4 (update the dotfiles repo first) is the step the obvious version of this recipe omits. Editing the live `~/.config/mutt/muttrc` directly before updating the repo copy makes the two diverge. A second laptop bootstrapped from the repo today would deploy a muttrc that points at a Maildir that does not exist. Always edit the repo file, then `install.sh`.
+The same hazard exists inside a git repository. The GitHub CLI's
+settings folder was linked into the dotfiles repository, so its live
+login token appeared as an uncommitted change on every machine. It was
+never committed, and the token file is now excluded, but the only
+difference from the Dropbox case was that this leak was waiting for a
+commit instead of happening on its own.
 
-The pre-XDG location (`~/Mail/`) can be deleted after a few days of confirmed working state; keep it around briefly as a rollback target.
-
-## Layer 3: Append-only history files
-
-This layer is small in bytes but disproportionate in friction. The relevant files:
-
-- `~/.zsh_history` (shell command history)
-- `~/.viminfo` (vim's last-used files, registers, marks)
-- `~/.claude/history.jsonl` (Claude Code prompt history)
-- Editor undo files (`~/.local/state/vim/undo/`)
-- AI-tool histories from any other tools (`~/.gemini/`, etc.)
-
-Each is append-only at the application level and whole-file at the sync layer. That mismatch is what produces conflict copies. There are three architecturally honest choices:
-
-1. **Per-machine state.** Do not sync these files at all. Accept that arrow-key history on one laptop does not include commands typed on another. Simplest; works for most users; what most non-Dropbox dotfile setups assume.
-2. **Single-machine writes.** Designate one machine as the canonical owner; the others write to local files that are never synced. Practical only if the user genuinely uses one machine 95% of the time.
-3. **Append-aware sync.** A few sync mechanisms (atuin for shell history, custom JSONL mergers for AI logs) understand append semantics and can merge two divergent streams. More moving parts, but eliminates the conflict-copy class entirely.
-
-The right choice depends on the user. Most readers will be happiest with option 1 plus, optionally, atuin for shell history because it is genuinely useful across machines and well-engineered for the multi-machine case.
-
-# The Decision Worksheet
-
-The companion deliverable for this post is a Quarto document at `docs/migration-decision-worksheet.qmd`. It walks the reader through:
-
-1. **Inventory.** List every sync-relevant artifact in `$HOME` and `~/Dropbox/`. Classify each into one of the three layers.
-2. **Mechanism selection.** For each layer, pick a sync mechanism (or 'no sync, per-machine') from the table above.
-3. **Migration order.** Sequence the moves so the backup pipeline
-   never points at a stale path. The general rule is: dotfiles
-   first (already done per the prerequisites above), then a single
-   project as a pilot, then the rest of project content, then
-   history files.
-4. **Verification.** Bootstrap a clean user account or VM and confirm the full workflow comes up without Dropbox.
-
-The worksheet is generic; it does not assume any particular
-project structure or sync mechanism. Completing it for a given
-setup converts the migration into a series of small, audited
-moves rather than a single large rewrite.
+The lesson for the migration plan is that the inventory of a synced
+tree is also an inventory of secrets, and it should be done first. A
+search of every linked settings folder for keys, tokens and passphrases
+decides whether the project is a tidy-up or an incident response.
 
 # Migration Sequence
 
-The order of operations matters because the backup pipeline must remain valid at every intermediate step. The sequence below comes from running this migration on a real workflow.
+The order matters because the backup jobs must stay valid at every
+step and because a shared copy can only be deleted once.
 
-1. **Confirm dotfiles foundation.** Verify the dotfiles repository works. Run `install.sh --dry-run` on a clean account or VM. Resolve any failures before proceeding.
-2. **Introduce a path-abstraction env var.** Add `PRJ_ROOT` to `~/.zshenv` with a fallback that resolves to `~/Dropbox/prj` for now. Replace literal `~/Dropbox/prj` references in scripts and configs with `$PRJ_ROOT`. Nothing visible changes, but the next move is now a single-line edit.
-3. **Pilot one project.** Pick a single small repo. Move it from `~/Dropbox/prj/<project>/` to `~/prj/<project>/` (real path, outside cloud). Push to a private git remote if it is not already. Confirm the workflow on it.
-4. **Migrate the rest of project content in batches.** A batch a day prevents the backup pipeline from going stale. For each batch: move, repoint any in-script paths, push to remotes, verify.
-5. **Repoint backup sources.** Once `$PRJ_ROOT` resolves to the
-   new path, edit `backup-gdrive` and `backup-icloud` (or their
-   equivalents) to source from `$PRJ_ROOT` instead of the literal
-   Dropbox path. The launchd plists themselves do not change; only
-   the scripts they call.
-6. **Resolve append-only history.** Pick option 1, 2, or 3 from
-   the previous section. Apply per-file. Document the choice in
-   the dotfiles repo's README for future reference.
-7. **Verify on a clean account.** Boot a fresh user, clone dotfiles, run installer, set up project remotes, confirm the workflow. The first surprise reveals the assumption that was hiding.
-8. **Optional: uninstall Dropbox.** Most users do not need to actually remove Dropbox. Once the workflow is independent, Dropbox can stay installed as a backup or for sharing files with colleagues, without being load-bearing for the workflow itself.
+1. **Inventory and classify.** List every top-level item in the synced
+   folder and every link into it from `$HOME`, hidden folders included.
+   Assign each to configuration, project content, history, settings or
+   'delete'. Search the settings folders for credentials before anything
+   else.
+2. **Back up every machine independently.** Confirm a recent,
+   successful backup that does not depend on the sync client.
+3. **Introduce the path variable.** Rewrite scripts to use `$PRJ_ROOT`
+   while it still resolves to the synced path.
+4. **Pause every scheduled job that reads what is moving.** A nightly
+   cloud backup that started at 02:00 was still running when the first
+   folder moved and logged thousands of 'file not found' errors. Nothing
+   was lost, because deleted files go to a dated folder rather than
+   away, but every backup job was paused for the rest of the move.
+5. **Copy to every machine, verify each copy, then delete the shared
+   copy.** See the next section for why this order is not optional.
+6. **Repoint and resume the backups.** Confirm in each job's log, not
+   from its schedule, that it now reads the local folder.
+7. **Uninstall the client** after the link audit described below.
 
-The sequence is robust to interruption. Stopping after step 3
-leaves a working pilot with the backup pipeline intact. Stopping
-after step 5 leaves the workflow independent; the history-file
-decision can be deferred.
+# Deleting a Shared Copy Safely
+
+Deleting content from a shared sync account is a fleet-wide operation,
+and three incidents showed what that means in practice.
+
+**Emptying propagates.** Once julia's copy of the project tree was
+removed from the account, the removal began to propagate to the other
+Macs, which were still reading their projects from the synced folder.
+athena's tree was copied to a local folder minutes before the removal
+reached it. joe's could no longer be read in place by the time it was
+checked, so its 19 GB tree was restored by copying directly from julia's
+verified copy over the LAN.
+
+**A forgotten client restores what was deleted.** zeus, the Linux
+laptop, had its own Dropbox client and stale local copies of the project
+tree and of an old SSH key folder. Nothing on zeus used either, which
+had seemed reason enough to leave it alone. When its client reconnected,
+it uploaded both again, with their original dates. The client was
+removed from zeus and the content deleted a second time.
+
+**A partial copy restores part of it.** A smaller reappearance followed.
+The account's own list of linked devices showed a phone that had never
+been part of the workflow and had cached a selection of files. It was
+unlinked, along with zeus, which still appeared in the list after its
+local uninstall, and the remaining content was deleted for the last
+time.
+
+The procedure that follows from these incidents:
+
+1. Read the account's linked-device list first. It, and not the list of
+   machines one remembers, is the inventory.
+2. Unlink every device that is not part of the migration.
+3. Copy to every machine that needs the content and verify each copy
+   (size, file count, and for repositories a `git log` that matches).
+4. Delete the shared copy last, then check the account again a day
+   later.
+
+# Uninstalling the Client
+
+Dragging the application to the Trash removes only the application.
+The rest has to be found:
+
+- **Links into the synced tree.** Audit `$HOME`, including hidden
+  folders, for symbolic links whose targets lie inside the sync folder.
+  A link that still resolves is something still in use; a link that
+  dangles is debris. Both must be resolved before the uninstall, or
+  some tool fails in an obscure way afterwards.
+- **Preference files, caches, login items and helper extensions,** some
+  of them installed system-wide and requiring administrator rights to
+  remove.
+- **The file-provider registration** through which macOS presents the
+  cloud folder in Finder. It is normally released by the vendor's
+  uninstaller; Dropbox has none. On two Macs one empty registration
+  folder could not be removed by any method short of reinstalling the
+  client; it holds no files and connects to nothing, and was left in
+  place.
+
+```bash
+# Links in $HOME (one level, hidden included) that point into a
+# Dropbox path. Repeat for deeper folders that you know held links.
+find "$HOME" -maxdepth 1 -type l -print0 |
+  while IFS= read -r -d '' link; do
+    target=$(readlink "$link")
+    case "$target" in
+      *Dropbox*) printf '%s -> %s\n' "$link" "$target" ;;
+    esac
+  done
+```
+
+The audit also found a stale checkout of the dotfiles repository on one
+Mac whose backup scripts still read the old Dropbox path. That machine's
+nightly cloud backup had been copying a frozen copy of the project tree
+for weeks while every run completed normally.
+
+# After the Uninstall: What Was Left
+
+An uninstall is not the end of the migration. More than two weeks after
+the client was gone from every machine, a sweep for the old name found
+more.
+
+**References in live configuration.** Across the five machines, the
+sweep found a shell directory-shortcut list and an editing alias that
+still named the old folder; a project-root fallback list that tried the
+new location first and the old ones after; a mail-sync certificate path
+that no longer existed; commented-out editor paths; settings and caches
+of command-line tools; a link to a tool installed inside the old tree
+(the command had been broken since the move); a link to a teaching
+project; and a standalone shell file on the server. None of these failed
+loudly. The fallback list in particular kept working, which is exactly
+why it had survived. The tracked configuration, each machine's
+`~/.config` and the assistant's instruction files were cleaned, and a
+search of the tracked files now returns nothing:
+
+```bash
+# Tracked configuration: any mention of the old name
+git -C ~/dotfiles grep -n -i dropbox
+
+# Per-machine settings and tool caches (an unreadable file makes grep
+# exit non-zero even after a match, so read the listing, not the status)
+grep -rIl -i dropbox ~/.config
+```
+
+Left in place on purpose: the migration records and the backups'
+history, which describe what happened. Not rewritten: nearly four
+hundred files in dozens of project folders that mention the old path in
+notes, render stamps or documents. That is a separate, mechanical job
+with commits in each project.
+
+**The account itself.** The client was gone, but the account still held
+things the file listing did not show: a whole-computer backup of a Mac
+that no longer had the client (about 11 GB, made by the client's backup
+feature), a connected-app folder of public-domain ebooks from years
+earlier, empty folders named for the old settings directories, and
+batches of deleted files from the cleanup days that were still
+recoverable. The paid plan was set to lapse to the free tier on a later
+date. The app folder and the empty folders had been deleted by
+2026-10-09; deleting the backup and purging the deleted-file batches was
+still to be done when this section was written, and has not been
+verified since.
+
+# Keeping Machines in Step Afterwards
+
+Nothing synchronizes the machines automatically any more, and that is
+deliberate. Two habits replace the daemon.
+
+**Pull the shared configuration.** A change made in `~/dotfiles` on one
+machine reaches the others only after a `git pull` on each. The shell
+helps: entering any git repository compares it with its last-fetched
+upstream and, if it is behind, prints a one-time warning and keeps a
+small `↓N` indicator in the prompt until the repository is pulled. The
+underlying fetch is throttled to once every four hours per repository,
+so the check costs nothing on every prompt.
+
+**Authenticate git through the GitHub CLI.** Repository remotes use
+HTTPS, and git obtains credentials from the `gh` credential helper,
+which keeps its token in the macOS Keychain. This removes the need for
+a separate SSH key per machine for code hosting. Two details matter.
+The token needs the `workflow` scope, or GitHub refuses any push that
+adds or changes an Actions workflow file. And Keychain items are not
+available to a plain SSH session, so a pull run remotely into a Mac
+fails where the same command at the keyboard succeeds.
+
+```bash
+# One-time setup on each Mac: log in, then let gh act as git's
+# credential helper and default to HTTPS for new clones.
+gh auth login --hostname github.com --git-protocol https
+gh auth setup-git
+gh config set git_protocol https --host github.com
+# Add the scope needed to push changes to Actions workflow files.
+gh auth refresh --hostname github.com --scopes workflow
+```
+
+Project work follows the same discipline: commit and push before
+leaving a machine, pull before starting on another. For content that is
+not in git, the rule is one machine at a time per project.
 
 ![Two open-top boxes side by side on a workbench, the left box full of mixed objects and the right box divided into three sorted compartments, with a single object mid-transfer between them.](media/images/ambiance2.png){.img-fluid height=3.5in}
 
 # Things to Watch Out For
 
-Seven gotchas to anticipate during the migration. Each lists the symptom and the fix.
-
-1. **The backup pipeline goes stale silently.** Symptom: `backup-gdrive` runs every night, exits 0, but the syncthing folder it backs up has not changed in a week because the source path no longer exists. Fix: `rclone sync` exits 0 even when the source is empty, so add an explicit `[[ -d $PRJ_ROOT ]]` guard at the top of every backup script and fail loud on missing source.
-2. **Cloud-mounted git working trees corrupt their indexes.** Symptom: `git status` reports phantom changes; `git fsck` finds dangling refs; the working tree is inconsistent. Fix: never put `~/dotfiles/` inside `~/Dropbox/`, `~/Library/CloudStorage/...`, or `~/Library/Mobile Documents/`. Git's frequent writes to `.git/index` race with the cloud provider's sync engine. The repo MUST be on a non-synced filesystem path.
-3. **Symlinks to Dropbox break asymmetrically across machines.** Symptom: `~/.config/git -> ~/Library/CloudStorage/Dropbox/dotfiles/config/git` on machine A, but on machine B the same symlink is dangling because Dropbox is at a different path or not installed. Fix: symlinks created by `install.sh` should target `$DOTFILES` (an env var resolved at install time), not literal Dropbox paths.
-4. **Append-only history conflict copies do not announce themselves.** Symptom: a file named `history (machine's conflicted copy YYYY-MM-DD).jsonl` appears next to the canonical file, with no notification, no error, no merge prompt. Fix: a weekly grep for 'conflicted copy' across the Dropbox tree, or an explicit migration of the affected files out of cloud sync.
-5. **launchd plist substitutions overwrite themselves.** Symptom: an edit to `~/dotfiles/launchd/local.backup.research.plist` does not change the running job. The reason is that `install.sh` sed-substitutes `__USER__` to `$USER` when writing to `~/Library/LaunchAgents/`, and the active plist is the substituted copy. Fix: do not edit the active plist directly; edit the source in `~/dotfiles/launchd/`, then re-run `install.sh` plus `launchctl bootout` and `launchctl bootstrap`.
-6. **Project content includes runtime artifacts that should not
-   move.** Symptom: a 200 MB `renv/library/` directory comes along
-   with a project move and now lives at
-   `~/prj/<project>/renv/library/`, where renv expects to manage
-   it. Fix: confirm `.gitignore` excludes the right paths before
-   pushing; add `**/renv/library/` to the dotfiles repo's
-   `.gitignore` if one is accidentally tracked.
-7. **In-place editors race with cloud sync and truncate files to zero bytes.** Symptom: `sed -i.bak file`, `awk -i inplace`, or `perl -i` against a path under `~/Library/CloudStorage/...` returns 0 but leaves the file empty. The `.bak` saved by `-i.bak` is also placed in cloud storage and is subject to the same race. On the incident that produced this gotcha, both the file and its backup were lost locally and required Dropbox version-history restore. Fix: never run `-i`-style editors on cloud-mounted paths. Either use the Edit tool / a real editor, or copy to `/tmp`, edit, and `mv` back. (If the dotfiles repo is on a non-synced path per gotcha 2, this hazard is confined to scripts that touch `~/Library/CloudStorage/...` from elsewhere.)
-
-# Uninstall / Rollback
-
-The most common 'undo' is not 'reinstall Dropbox' but 'put project content back under Dropbox while keeping dotfiles independent'. The architecture supports this directly because the layers are independent.
-
-To roll project content back into Dropbox:
-
-1. Move `~/prj/<project>/` back to `~/Dropbox/prj/<project>/`.
-2. Update `~/.zshenv` so `PRJ_ROOT` resolves to the Dropbox path.
-3. The dotfiles repo, backup scripts, and launchd plists do not need any change because they reference `$PRJ_ROOT`.
-
-This is also the recommended path for a reader who completed the dotfiles work but is not yet ready to migrate project content. Set up the env var, leave the path pointing at Dropbox, defer the project move until later.
-
-To roll back the entire migration: the dotfiles installer's `--dry-run` should never have shipped destructively, so the rollback is just `rm -rf ~/dotfiles` plus restoring `$HOME` from a Time Machine backup. Most readers will not need this.
+1. **Backup sources go stale silently.** Symptom: a nightly backup
+   completes normally while its source no longer exists or no longer
+   holds the live copy. Borg, for example, skipped `~/prj` and two
+   sibling folders for days after they stopped being links, logging a
+   single warning per run. Fix: name sources directly, check each
+   job's log and file counts after every structural change, and guard
+   scripts with an explicit test that the source exists.
+2. **Git working trees inside a synced folder corrupt.** Symptom:
+   phantom changes or a damaged index. Fix: keep every repository on a
+   path no sync client watches.
+3. **Links that resolve on one machine dangle on another.** Symptom: a
+   configuration link works on the machine that created it and fails
+   elsewhere. Fix: let the installer create links relative to
+   `$DOTFILES`, never to a literal sync path.
+4. **Conflict copies do not announce themselves.** Symptom: files named
+   '(conflicted copy)' accumulate beside the original. Fix: stop
+   syncing append-only files; until then, search for them periodically.
+5. **In-place editors can truncate files on cloud-mounted paths.**
+   Symptom: `sed -i` (or `perl -i`, `awk -i inplace`) exits 0 and
+   leaves an empty file, and the `.bak` copy is lost the same way.
+   Fix: never run in-place editors under `~/Library/CloudStorage/`;
+   edit a copy elsewhere and move it back.
+6. **Installed launchd jobs are copies.** Symptom: editing the job file
+   in the dotfiles repository changes nothing. Fix: edit the source,
+   rerun the installer, then unload and load the job.
+7. **One bad link can stop a mirror's deletions.** Symptom: a cloud
+   mirror grows without bound although every run looks routine. A link
+   pointing to itself made `rclone sync -L` report a listing error, and
+   on any such error it skips every deletion for the run. Fix: remove
+   loops and dangling links from backed-up trees; details in [Research
+   Backup Architecture](../sec-three-tier-backup-architecture/).
 
 ![A closed wooden chest with three small brass clasps on a stone surface, an open notebook and a capped fountain pen beside it, suggesting a deliberate and completed reorganization.](media/images/ambiance3.png){.img-fluid height=3.5in}
 
@@ -391,173 +479,153 @@ To roll back the entire migration: the dotfiles installer's `--dry-run` should n
 
 **Conceptual:**
 
-- The 'sync everything via one cloud provider' default conflates three independent concerns. Separating them makes each easier to reason about.
-- Migration sequencing matters more than mechanism choice. The wrong mechanism is correctable; a half-migrated workflow is hard to leave for a year.
-- Per-machine state is a feature, not a bug, for many file types. The right answer for shell history is often 'do not sync', not 'sync better'.
+- Classification comes before mechanism. Configuration, code, data,
+  history and settings each have a right answer, and they are not the
+  same answer.
+- A synced folder is a distribution channel for whatever is written
+  into it. Settings folders linked into it carry credentials created
+  long after the link.
+- Per-machine state is often the correct design, not a compromise.
 
 **Technical:**
 
-- A single environment variable (`$PRJ_ROOT`) provides enough indirection to migrate path references in two passes: first introduce the variable while it still resolves to Dropbox, then change what it resolves to.
-- launchd plists with `__USER__` placeholders deploy cleanly across machines via `install.sh` sed-substitution; bootstrapping the substituted copy avoids machine-specific files in the dotfiles repo.
-- Atomic git operations on a non-synced filesystem are reliable; the same operations on a cloud-synced filesystem race with the sync engine and produce subtle corruption.
+- One environment variable gives enough indirection to move a project
+  tree in two safe steps.
+- HTTPS remotes with the `gh` credential helper remove per-machine SSH
+  keys for code hosting, at the cost of the Keychain-over-SSH caveat.
+- A behind-upstream indicator in the prompt replaces most of what a
+  sync daemon did for configuration, without hiding anything.
 
 **Gotchas:**
 
-- 'rclone sync exits 0' does not mean the sync succeeded; it can mean the source had nothing to send because the path is wrong.
-- A symlink created on one machine resolves correctly on that machine but may dangle on another. Always test the new-machine case.
-- Conflict copies of append-only files accumulate silently. Periodic auditing is the only way to notice.
+- The device list of the sync account is the only reliable inventory of
+  who can restore deleted content.
+- A job that exits normally has not necessarily done its work; read the
+  log.
+- A stale checkout of shared scripts on one machine reproduces old bugs
+  there, however long ago they were fixed elsewhere.
+- A path list that tries the new location first and the old one second
+  keeps working after the old one disappears, so nothing ever flags it.
+  Sweep configuration for the old name, not only the links.
+- The account has residue the files page does not show. The client's
+  backup and connected-app features store data on the server that
+  survives the client's uninstall; check those pages too.
 
 ## Limitations
 
-- The migration described here covers a single-user workflow. Team setups (where the same Dropbox folder is shared with collaborators) need additional considerations not addressed in this post.
-- Project content moved from Dropbox to per-project git remotes is now subject to GitHub or GitLab quotas, including LFS limits for binary files. Plan accordingly.
-- The decision worksheet is a generic framework; it does not generate scripts for any particular sync mechanism. Each reader still has to write the rclone or rsync commands for their setup.
-- Append-aware history sync (option 3) requires either an existing tool (atuin works for shell history) or hand-rolled mergers for proprietary log formats. The post does not provide those mergers.
-- Migrating off Dropbox does not, by itself, improve the security posture of credentials. Files like `~/.aws/credentials` should be addressed separately; cloud sync was not their only exposure.
-- The post assumes macOS or Linux. Windows-specific path conventions and sync semantics are out of scope.
+- The account described here was single-user. A folder shared with
+  collaborators needs agreement on the move and is out of scope.
+- The sync account itself remains open. The client is gone and the paid
+  plan is set to lapse to the free tier, but deleting the account is a
+  separate decision, and its last contents (see the section above) were
+  not fully cleared when this was written.
+- Moving to local folders gives up instant cross-machine availability of
+  uncommitted work. The rule of committing before switching machines
+  is a habit, not an enforcement mechanism.
+- The fresh-machine bootstrap time has not been measured since the
+  move; a restore runbook and the Brewfile exist, but no timed rebuild
+  has been run.
 
 ## Opportunities for Improvement
 
-1. Extend the decision worksheet into a small CLI tool that audits a current setup and generates a draft migration plan.
-2. Build an atuin (or atuin-equivalent) integration template for the dotfiles repo, so option 3 from layer 3 becomes a one-line opt-in.
-3. Add a `verify.sh` to the dotfiles repo that runs the end-to-end check (dotfiles installed, `$PRJ_ROOT` valid, backup scripts pointing at it, launchd jobs loaded) on demand and reports pass/fail.
-4. Document a canonical 'two-laptop' setup with Syncthing replacing the Dropbox role for shared project content.
-5. Generalize the worksheet's mechanism table into a maintained list (a small repo or a wiki page) that adds new tools as the ecosystem evolves (Filen, S3-backed, etc.).
+1. Add a `verify` target to the dotfiles repository that checks, on
+   demand, that every link resolves, `$PRJ_ROOT` exists, and each
+   scheduled job's last exit status is zero.
+2. Time a full rebuild of one machine from the runbook and record the
+   result.
+3. Add a pre-commit secret scanner to the dotfiles repository, so the
+   next token that lands in the working tree is caught by a tool rather
+   than by chance (see [Secrets Management for the Workflow
+   Construct](../sec-aws-and-pass-secrets/)).
+4. Decide whether to close the sync account, after a final review of
+   its remaining contents and version history, once the plan has
+   lapsed to the free tier and the leftover backup and deleted-file
+   batches are gone.
+5. Rewrite the old path in the project files that still mention it, in
+   one mechanical pass with a commit per project.
 
 # Wrapping Up
 
-A portable dotfiles repository is the first half of a Dropbox-free workflow; this post is the framework for the second half. The key idea: stop treating sync as a single dimension and start treating it as three layers (configuration, project content, append-only history) with different semantics and different right answers.
+Leaving Dropbox was mostly a matter of deciding what each file was. Once
+configuration had a repository, projects had local folders and
+backups, history files stayed on the machine that wrote them, and
+settings folders were back in `$HOME`, the remaining work was careful
+copying and a disciplined order of deletion. The parts that cost time
+were the parts a sync daemon had hidden: credentials in linked folders,
+devices that still held copies, and backups that kept succeeding at the
+wrong job.
 
-Most of the work is in the inventory and decision step, not in the moves themselves. Once each artifact is classified and each layer has a chosen mechanism, the actual migration is a sequence of small file moves and a few text edits. The pieces that take time are testing the new-machine bootstrap, deciding what to do about history files, and resisting the temptation to migrate everything in one weekend.
+Main takeaways:
 
-## Expected outcomes
-
-The architecture aims to deliver three measurable end states. The first is verifiable now (Layer 1 is complete on the author's primary laptop); the other two will be confirmed and updated with measured numbers when Layer 2 and Layer 3 land.
-
-- **New-laptop setup** is `git clone … ~/dotfiles && ./install.sh && (per-project git clones)`. The plan budget is roughly 30 minutes from clean machine to working environment; the actual figure will be added after a fresh-VM bootstrap is run.
-- **Conflict copies of `history.jsonl` and similar files** should stop recurring once the affected files are moved out of Dropbox sync. The post will be updated with the post-migration count once Layer 3 is applied.
-- **Backup pipelines** will source from `$PRJ_ROOT`, which can point anywhere; once Layer 2 lands, Dropbox is no longer load-bearing for the workflow.
-
-In conclusion, four points merit emphasis. First, the dotfiles
-layer is the wedge, not the goal; once it is in place, the rest
-of the migration is mechanical. Second, 'project content' is two
-layers in disguise (code, which wants git, and data, which wants
-something else); the two should be separated before a mechanism
-is chosen. Third, some of what looks like 'data' is actually a
-local cache of an authoritative source elsewhere (Maildir from
-IMAP, Homebrew cache, language-server indexes); for these the
-right answer is not to sync at all, but to rebuild on each
-machine from the canonical source. Fourth, append-only files are
-the only category that benefits from sophisticated sync; for
-everything else, simpler is better.
+- Inventory secrets before files; a linked settings folder can turn a
+  migration into a credential rotation.
+- Copy everywhere, verify, then delete the shared copy, and check the
+  account's device list before trusting that anything is gone.
+- Audit `$HOME` links before uninstalling the client.
+- Replace the daemon with explicit habits: `git pull`, a prompt that
+  shows when a repository is behind, and HTTPS remotes through the `gh`
+  credential helper.
+- Verify every backup by its log after every structural change.
 
 # See Also
 
-- `MULTI_LAPTOP_PLAN.md` (in the dotfiles repository) — the live action plan tracking this migration, with done-marks and effort estimates for each step. `MIGRATION_NOTES.md` in the same repository captures what was copied and what was deliberately excluded during the Layer 1 move.
-- [Syncthing documentation](https://docs.syncthing.net/) — peer-to-peer sync, the most-recommended Dropbox replacement for project content.
-- [Atuin](https://atuin.sh/) — the cleanest answer to 'I want my shell history across machines'; an example of append-aware sync done right.
-- [The XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) — the underlying convention that determines where each XDG-aware tool actually puts its files; relevant when choosing between `~/.cache`, `~/.local/share`, and `~/.local/state`.
+Security series:
+
+1. [Security Foundations for a Multi-Machine Research Fleet](../sec-multi-laptop-threat-model/)
+2. [Setting Up pass: a Unix Password Manager](../sec-pass-password-manager/)
+3. [Secrets Management for the Workflow Construct](../sec-aws-and-pass-secrets/)
+4. Migrating Off Dropbox: Beyond Dotfiles (this post)
+5. [Research Backup Architecture: Borg, Cloud Copies, and Time Machine](../sec-three-tier-backup-architecture/)
+6. [A Home Server for a Five-Machine Research Fleet](../sec-five-machine-storage/)
+7. [Object Storage for Research Data: The Layer Git Cannot Hold](../sec-object-store-research-data/)
+8. [Running the Quarterly Security Audit for the First Time: What Actually Broke](../sec-fleet-hardening-lessons/)
+
+External references:
+
+- [GitHub CLI manual: `gh auth
+  setup-git`](https://cli.github.com/manual/gh_auth_setup-git).
+- [Dropbox account security page](https://www.dropbox.com/account/security),
+  which lists every device ever linked to the account.
+- [Atuin](https://atuin.sh/), append-aware shell history across
+  machines.
+- [XDG Base Directory
+  Specification](https://specifications.freedesktop.org/basedir-spec/latest/),
+  for where per-machine state belongs.
 
 # Reproducibility
 
-Tested on:
-
 | Component | Version |
 |---|---|
-| OS | macOS 15.4 (Sequoia) |
+| OS | macOS 26.6 (three Macs); Linux Mint 22 (zeus) |
 | Shell | zsh 5.9 |
-| git | 2.45 |
-| rclone | 1.68 |
-| Syncthing | 1.27 |
-| flock (homebrew) | 2.40 |
-| Date verified | 2026-05-07 |
+| git | 2.55 |
+| GitHub CLI | 2.101 |
+| rclone | 1.75 |
+| Borg | 1.4.5 |
+| Date verified | 2026-10-01 |
 
-The decision worksheet is a generic Quarto document and does not depend on any particular tool versions; the table above captures the environment in which the framework was developed and validated.
+The `PRJ_ROOT` block and the `gh` commands are the ones in use on the
+fleet. The link-audit loop was written for this post and checked on one
+Mac; adapt the pattern for other sync clients. The post-uninstall sweep
+and the account observations are dated 2026-10-09 to 2026-10-12: the
+sweep was run on all five machines and its results checked by running
+it again; the account's contents were read from its web pages, and
+whether the remaining items there have since been deleted was not
+checked.
 
 # Let's Connect
 
-I would enjoy hearing from you if:
+*Questions, suggestions, or corrections are welcome.*
 
-- You have made the same migration with different sync-mechanism choices and want to compare notes.
-- You see a gotcha I missed, especially in the append-only-history layer.
-- You use Linux or Windows and want to extend the worksheet to your environment.
-- You just want to say hello and connect.
+- **GitHub:** [rgt47](https://github.com/rgt47)
+- **Twitter/X:** [@rgt47](https://twitter.com/rgt47)
+- **LinkedIn:** [Ronald Glenn Thomas](https://linkedin.com/in/rgthomaslab)
+- **Email:** [Contact form](https://rgtlab.org/contact)
 
----
+I would like to hear from you if:
 
-*Rendered on 2026-09-11 at 19:04 PDT.*<br>
-*Source: ~/prj/rgtlab/posts/sec-dropbox-to-portable-sync/index.qmd*
-
-<!-- ============================================================================
-PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
-
-This is the verification pass that mirrors the AUTHOR PROVIDES list at the
-top of this file. If anything below is unchecked, the post is not ready.
-
-[ ] YAML
-    [ ] title, subtitle, date, categories, description, image filled in
-    [x] document-type: 'blog'
-    [x] draft: false
-
-[ ] Narrative complete (no remaining `[bracketed]` placeholders)
-    [ ] grep '\[' index.qmd returns only legitimate code/links
-
-[ ] Configuration artifacts present and tested
-    [ ] Full config file shown verbatim, not snippets
-    [ ] Install commands tested on a clean machine (or VM)
-    [ ] Verification commands produce the documented output
-    [ ] Uninstall / rollback steps documented
-
-[ ] Things to Watch Out For
-    [ ] At least 5 gotchas listed (setup posts require this)
-    [ ] Each gotcha has both a symptom AND a fix
-
-[ ] Visual design
-    [ ] 1 hero image (width=80%) immediately after AUTHOR PROVIDES block
-    [ ] Exactly 3 ambiance images ({.img-fluid} only, no width=NN%,
-        no fig-align): after Objectives, after Configuration, before
-        Lessons Learnt
-    [ ] Hero and ambiance captions describe the actual image (not a
-        placeholder description)
-    [ ] No hand-coded "Download PDF" link in body. The site auto-injects
-        one via _includes/after-body.html for any post with format: pdf
-        in YAML.
-    [ ] media/images/README.md attributes every image
-
-[ ] Content quality
-    [ ] Learner voice: author positioned as peer, not expert
-    [ ] Zero emoji anywhere (narrative, comments, captions)
-    [ ] Zero em dashes (forbidden per house style; use parens or commas)
-    [ ] Single quotes preferred over double quotes in prose
-    [ ] Each command and config setting interpreted in plain language
-
-[ ] Reproducibility
-    [ ] Version matrix table filled in (OS, tool, dependencies, date)
-    [ ] Config files committed under analysis/configs/
-    [ ] Install script (if provided) is runnable on a clean machine
-
-[ ] Render verification
-    [x] quarto render index.qmd produces clean HTML with no warnings
-    [x] Hero image displays in /blog/ listing card
-    [ ] Internal links resolve
-============================================================================ -->
-
-## Related posts in this cluster
-
-This post is part of the *Cloud Sync Migration* series. Recommended
-reading order:
-
-1. **Migrating Off Dropbox: Beyond Dotfiles** (this post)
-2. [Object Storage for Research Data: The Layer Git Cannot Hold](../sec-object-store-research-data/)
-3. [Five Machines, One Object Store, No Sync Daemon](../sec-five-machine-storage/)
-
-It picks up after the dotfiles work described in
-[Multi-Laptop macOS Bootstrap](../wf-multi-laptop-dotfiles-bootstrap/),
-and it pairs with the *Security, Backup, and Sync* series for
-readers who need the credential and backup layers:
-
-- [Research Backup Architecture](../sec-three-tier-backup-architecture/)
-- [Setting Up pass: a Unix Password Manager](../sec-pass-password-manager/)
-- [Secrets Management for the Workflow Construct](../sec-aws-and-pass-secrets/)
-- [Security Foundations for a Multi-Laptop Research Cluster](../sec-multi-laptop-threat-model/)
-
+- You find an error, or a better approach to anything in this series.
+- You run a small research fleet and have found where this design
+  breaks.
+- You want to compare notes on backups, secrets, or reproducible
+  research infrastructure.
