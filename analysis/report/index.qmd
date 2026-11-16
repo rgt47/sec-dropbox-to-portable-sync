@@ -579,6 +579,7 @@ Security series:
 6. [A Home Server for a Five-Machine Research Fleet](../sec-five-machine-storage/)
 7. [Object Storage for Research Data: The Layer Git Cannot Hold](../sec-object-store-research-data/)
 8. [Running the Quarterly Security Audit for the First Time: What Actually Broke](../sec-fleet-hardening-lessons/)
+9. [Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks](../sec-backup-failure-forensics/)
 
 External references:
 
