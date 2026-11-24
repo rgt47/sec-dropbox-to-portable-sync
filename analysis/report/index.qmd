@@ -33,6 +33,16 @@ and attribution in media/images/README.md.
 
 *One sync mechanism for everything becomes several mechanisms, each matched to what it carries.*
 
+::: {.callout-note title="Updated 2026-11-23"}
+Two parts of the picture below have changed since the move. `~/docs` is
+no longer a set of independent copies: since 2026-11-08 Syncthing keeps
+it in step across the three Macs, over Tailscale only, with a one-year
+version store, and an encrypted Borg copy of it is mirrored off-site.
+And code no longer waits for a manual push: a global git post-commit
+hook pushes each commit to its remote as soon as it is made. The
+sections affected say so where they apply.
+:::
+
 # Introduction
 
 For years, one Dropbox folder held nearly everything in this research
@@ -171,22 +181,31 @@ if [[ -z "${PRJ_ROOT:-}" ]]; then
 fi
 ```
 
-Code moves between machines through each project's own git remote.
-Nothing synchronizes the rest of `~/prj` automatically. It is protected
+Code moves between machines through each project's own git remote
+(GitHub, or a bare repository on the home server for projects that may
+not use GitHub); since November a global post-commit hook pushes each
+commit as soon as it is made. Nothing synchronizes the rest of `~/prj`
+automatically. It is protected
 instead: nightly Borg backups to the home server cover every machine,
 and julia and athena also mirror `~/prj` to three cloud providers, each
 machine into its own destination folder. That design, and the failures
 it had to survive, belong to [Research Backup
 Architecture](../sec-three-tier-backup-architecture/). Data that is too
 large or too shared for this arrangement is the subject of [Object
-Storage for Research Data](../sec-object-store-research-data/).
+Storage for Research Data](../sec-object-store-research-data/), a design
+that has not been built.
 
 ## Documents, shared utilities and scratch space
 
 `~/docs` (personal, research and administrative documents, under half a
 gigabyte) became a plain local folder on each Mac, covered by the Borg
-backups. The copies are independent; documents are edited on one
-machine at a time. A folder of shared LaTeX and R utilities was first
+backups. At first the copies were independent, and documents were
+edited on one machine at a time. Since 2026-11-08 Syncthing keeps the
+three copies in step, peer to peer over Tailscale with discovery and
+relays turned off, and keeps a year of replaced or deleted versions on
+each Mac. A nightly job on one Mac also writes an encrypted Borg
+repository of `~/docs` and mirrors it to cloud storage, so the
+documents have an off-site copy the provider cannot read. A folder of shared LaTeX and R utilities was first
 moved out the same way and later retired altogether once nothing still
 depended on it. A sandbox folder, whose links had already gone stale on
 one machine, was deleted rather than migrated.
@@ -401,8 +420,10 @@ verified since.
 
 # Keeping Machines in Step Afterwards
 
-Nothing synchronizes the machines automatically any more, and that is
-deliberate. Two habits replace the daemon.
+No general-purpose daemon synchronizes the machines any more, and that
+is deliberate. The two exceptions are narrow: Syncthing for `~/docs`
+alone, and the post-commit hook that pushes each commit. Two habits
+replace the rest of what the daemon did.
 
 **Pull the shared configuration.** A change made in `~/dotfiles` on one
 machine reaches the others only after a `git pull` on each. The shell
